@@ -1,0 +1,29 @@
+[
+  {
+    "id": "promo001",
+    "product_ids": ["p004"],
+    "title": "20% korting op Vitamine C Bruistabletten",
+    "description": "Versterk de weerstand voor het najaar begint.",
+    "discount_percent": 20,
+    "start_date": "2026-08-15",
+    "end_date": "2026-09-30"
+  },
+  {
+    "id": "promo002",
+    "product_ids": ["p011", "p012"],
+    "title": "2e artikel halve prijs op huidverzorging",
+    "description": "Geldig op aftersun en dagcrème, zolang de voorraad strekt.",
+    "discount_percent": 50,
+    "start_date": "2026-08-01",
+    "end_date": "2026-09-15"
+  },
+  {
+    "id": "promo003",
+    "product_ids": ["p003", "p005"],
+    "title": "15% korting op vitamines voor het najaar",
+    "description": "Bereid het immuunsysteem voor op de herfst.",
+    "discount_percent": 15,
+    "start_date": "2026-09-01",
+    "end_date": "2026-10-31"
+  }
+]

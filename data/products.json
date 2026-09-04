@@ -1,0 +1,137 @@
+[
+  {
+    "id": "p001",
+    "name": "Paracetamol 500mg Tabletten (20 stuks)",
+    "category": "Pijnstillers",
+    "price_eur": 2.49,
+    "age_restriction": null,
+    "disclaimer": "Overschrijd niet de aanbevolen dosering. Raadpleeg een arts bij aanhoudende klachten na 3 dagen.",
+    "description": "Tabletten tegen pijn en koorts, geschikt voor volwassenen en kinderen vanaf 12 jaar."
+  },
+  {
+    "id": "p002",
+    "name": "Ibuprofen 400mg Tabletten (20 stuks)",
+    "category": "Pijnstillers",
+    "price_eur": 3.29,
+    "age_restriction": 12,
+    "disclaimer": "Niet gebruiken tijdens de laatste 3 maanden van de zwangerschap. Raadpleeg een arts of apotheker bij maagklachten.",
+    "description": "Ontstekingsremmende pijnstiller voor hoofdpijn, spierpijn en menstruatieklachten."
+  },
+  {
+    "id": "p003",
+    "name": "Vitamine D3 1000IE Tabletten (90 stuks)",
+    "category": "Vitamines & Supplementen",
+    "price_eur": 8.99,
+    "age_restriction": null,
+    "disclaimer": null,
+    "description": "Ondersteunt botten, spieren en het immuunsysteem, met name in de wintermaanden."
+  },
+  {
+    "id": "p004",
+    "name": "Vitamine C 1000mg Bruistabletten (20 stuks)",
+    "category": "Vitamines & Supplementen",
+    "price_eur": 5.49,
+    "age_restriction": null,
+    "disclaimer": null,
+    "description": "Draagt bij aan een normale weerstand en vermindert vermoeidheid."
+  },
+  {
+    "id": "p005",
+    "name": "Multivitamine Complex (60 stuks)",
+    "category": "Vitamines & Supplementen",
+    "price_eur": 11.95,
+    "age_restriction": null,
+    "disclaimer": null,
+    "description": "Dagelijkse aanvulling met 12 vitamines en 8 mineralen."
+  },
+  {
+    "id": "p006",
+    "name": "Neusspray Xylometazoline 0,1% (10ml)",
+    "category": "Verkoudheid & Griep",
+    "price_eur": 3.99,
+    "age_restriction": null,
+    "disclaimer": "Niet langer dan 7 dagen achtereen gebruiken. Niet geschikt voor kinderen onder 6 jaar.",
+    "description": "Verlicht een verstopte neus bij verkoudheid of hooikoorts."
+  },
+  {
+    "id": "p007",
+    "name": "Keelpastilles Honing & Citroen (24 stuks)",
+    "category": "Verkoudheid & Griep",
+    "price_eur": 2.99,
+    "age_restriction": null,
+    "disclaimer": null,
+    "description": "Verzacht een geïrriteerde keel en droge hoest."
+  },
+  {
+    "id": "p008",
+    "name": "Hoestdrank Droge Hoest (150ml)",
+    "category": "Verkoudheid & Griep",
+    "price_eur": 6.49,
+    "age_restriction": null,
+    "disclaimer": "Raadpleeg een arts als de hoest langer dan een week aanhoudt.",
+    "description": "Verlicht een droge, prikkelende hoest."
+  },
+  {
+    "id": "p009",
+    "name": "Melatonine 1mg Tabletten (30 stuks)",
+    "category": "Slaap",
+    "price_eur": 7.49,
+    "age_restriction": 18,
+    "disclaimer": "Niet geschikt onder de 18 jaar. Gebruik niet in combinatie met alcohol. Raadpleeg een arts bij langdurig gebruik.",
+    "description": "Ondersteunt het inslapen bij tijdelijke slaapproblemen."
+  },
+  {
+    "id": "p010",
+    "name": "Nicotine Kauwgom 4mg Freshmint (30 stuks)",
+    "category": "Stoppen met Roken",
+    "price_eur": 12.99,
+    "age_restriction": 18,
+    "disclaimer": "Niet geschikt onder de 18 jaar of voor niet-rokers. Raadpleeg een arts of apotheker bij langdurig gebruik.",
+    "description": "Helpt ontwenningsverschijnselen bij het stoppen met roken te verminderen."
+  },
+  {
+    "id": "p011",
+    "name": "Aftersun Lotion (200ml)",
+    "category": "Huidverzorging",
+    "price_eur": 6.99,
+    "age_restriction": null,
+    "disclaimer": null,
+    "description": "Verkoelt en hydrateert de huid na blootstelling aan de zon."
+  },
+  {
+    "id": "p012",
+    "name": "Vochtinbrengende Dagcrème SPF15 (50ml)",
+    "category": "Huidverzorging",
+    "price_eur": 9.99,
+    "age_restriction": null,
+    "disclaimer": null,
+    "description": "Hydrateert de huid en biedt lichte bescherming tegen UV-straling."
+  },
+  {
+    "id": "p013",
+    "name": "Anti-Acne Gel Benzoylperoxide 5% (30ml)",
+    "category": "Huidverzorging",
+    "price_eur": 8.49,
+    "age_restriction": null,
+    "disclaimer": "Kan de huid gevoelig maken voor zonlicht. Vermijd contact met ogen en kleding.",
+    "description": "Vermindert onzuiverheden en puistjes bij milde tot matige acne."
+  },
+  {
+    "id": "p014",
+    "name": "Pleisters Assortiment (40 stuks)",
+    "category": "Eerste Hulp",
+    "price_eur": 3.49,
+    "age_restriction": null,
+    "disclaimer": null,
+    "description": "Wondpleisters in verschillende maten voor kleine schaafwonden en sneetjes."
+  },
+  {
+    "id": "p015",
+    "name": "Orale Rehydratie Poeder (6 sachets)",
+    "category": "Maag & Darm",
+    "price_eur": 5.99,
+    "age_restriction": null,
+    "disclaimer": "Raadpleeg een arts bij aanhoudende diarree langer dan 2 dagen, vooral bij jonge kinderen of ouderen.",
+    "description": "Vult vocht en zouten aan bij diarree of braken."
+  }
+]

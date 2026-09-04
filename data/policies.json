@@ -1,0 +1,26 @@
+[
+  {
+    "id": "policy001",
+    "category": "age_restriction",
+    "title": "Leeftijdsgrens verkoop",
+    "description": "Producten met een leeftijdsgrens (age_restriction) mogen niet verkocht worden aan klanten die daar niet aan voldoen. Vraag bij twijfel naar legitimatie."
+  },
+  {
+    "id": "policy002",
+    "category": "medical_disclaimer",
+    "title": "Medisch advies",
+    "description": "Het personeel geeft geen medische diagnoses. Verwijs bij twijfel, aanhoudende klachten, zwangerschap, of interactie met andere medicatie altijd door naar een arts of apotheker."
+  },
+  {
+    "id": "policy003",
+    "category": "returns",
+    "title": "Retourbeleid",
+    "description": "Geopende geneesmiddelen en verzorgingsproducten kunnen om hygiënische redenen niet worden geretourneerd, tenzij het product defect is."
+  },
+  {
+    "id": "policy004",
+    "category": "data_privacy",
+    "title": "Klantgegevens",
+    "description": "Er wordt geen persoonlijke of medische informatie van klanten opgeslagen buiten de huidige sessie."
+  }
+]
