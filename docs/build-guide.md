@@ -30,9 +30,9 @@ Implement `services/ai_service.py`: send the structured outcome to Claude (see t
 Build `pages/2_employee_answer.py` (escalation banner, checks, blocked, alternatives, sources) and `pages/3_customer_view.py` (large type, presentation mode).
 **Done when:** the employee can turn the screen to the customer without any internal information visible.
 
-## Milestone 8: History and analytics
-Implement `services/analytics_service.py` (log row per `QueryResult`, standard categories, aggregations, CSV export) and `pages/4_history.py`: reopenable questions, summary strip, and the five Inzichten sub-tabs (Klachten, Categorieën, Doelgroep, Uitkomsten, Producten).
-**Done when:** ten seeded questions produce the same counts as `demo/index.html`, the export contains no question text or personal data, and every category falls in the standard list.
+## Milestone 8: History and the linked dashboard
+Implement `services/analytics_service.py` (log row per `QueryResult`, standard categories, cross-filtered aggregations, lift against the period baseline, CSV export) and `pages/4_history.py`: period control, filter chips, KPI strip with deltas, the klacht × doelgroep matrix, the linked panels, the assortment-gap list, and the reopenable session questions.
+**Done when:** selecting a complaint narrows every other panel and the matrix, selecting a matrix cell sets both filters, the export contains only the filtered selection and no question text or personal data, and every category falls in the standard list. Compare the same selection against `demo/index.html`.
 
 ## Milestone 9: Polish
 Loading state with `st.spinner`, cancel and restart, keyboard flow (Enter sends), Dutch everywhere.

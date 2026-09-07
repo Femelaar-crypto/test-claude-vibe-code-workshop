@@ -127,15 +127,21 @@ Purpose: the store learns what customers ask, for whom, and what happened, witho
 
 **Standard categories** are the product categories in `products.json` (Pijnstillers, Vitamines & Supplementen, Verkoudheid & Griep, Slaap, Stoppen met Roken, Huidverzorging, Eerste Hulp, Maag & Darm) plus four fixed ones for non-product questions: Beleid, Acties, Product opzoeken, Overig. A symptom question gets the category of the recommended product, else of the best candidate, else Overig.
 
-**Sub-tabs**, each a ranked list with counts and proportional bars:
+**The dashboard is one linked view, not separate tabs.** Every panel filters every other panel, so a question like "who are the people asking about hoofdpijn" is answered by clicking, not by reading two lists side by side.
 
-1. **Klachten**: complaint tags, most asked first.
-2. **Categorieën**: standard categories.
-3. **Doelgroep**: audience (self, partner, child by age bucket, other adult), pregnant count, and the top complaint per audience.
-4. **Uitkomsten**: recommended / blocked / not in assortment / referrals (pharmacist, doctor, urgent), plus the list of assortment gaps.
-5. **Producten**: most recommended, most blocked, and how often a promotion was shown.
+- **Period control**: 7 / 30 / 60 days, applied before anything else.
+- **Filter bar**: the active selection as removable chips, plus "Alles wissen". Filters combine with AND across dimensions.
+- **KPI strip**: questions in the selection, referral rate, not-in-assortment rate, promotion rate. When a filter is active each rate also shows its difference in percentage points against the period average, so the selection is always read against a baseline.
+- **Klacht × doelgroep matrix**: the cross-reference centrepiece. Cell intensity is one green ramp (light to dark) on count; the number is always printed, so colour never carries meaning alone. Clicking a cell sets both filters at once. Row totals on the right.
+- **"Opvallend aan deze selectie"**: over-representation (lift) of every attribute in the selection against the period average, ranked, e.g. "2.3× Klant zelf, 61% van deze selectie". Only shown at eight or more rows and three or more occurrences, so a handful of questions never produces a confident-looking claim.
+- **Linked panels**: Klachten, Doelgroep, Uitkomst, Doorverwijzing, Categorie, Sinds wanneer. Each bar shows the selection as a filled portion inside the period total, so subset and baseline are visible at once. A panel never filters itself, so switching value within a dimension stays possible.
+- **Gevraagd, niet in assortiment**: the assortment gaps, framed as the purchasing list.
 
-A summary strip above the tabs: total questions, referral rate, not-in-assortment rate, promotion rate. CSV export of the log rows.
+CSV export always exports exactly the current filtered selection, not everything.
+
+**Charts follow one rule set:** one hue for magnitude, count printed next to every bar, no pie charts, no second y-axis, and the whole dashboard readable as text if colour is unavailable.
+
+**Demo data.** The demo ships ~330 generated log rows across 60 days so the dashboard is meaningful on open. They are produced by running the real engine (search, safety, escalation), never by writing outcome fields directly, so no combination appears that the rules could not produce. Audience and complaint are deliberately correlated (acne skews to teenagers, koorts to under-fives, gewrichtspijn to older adults). The Streamlit app reads real rows instead; the generator is demo scaffolding.
 
 **Data policy (AVG):** the raw question text stays in the session only and is never exported. The log holds structured fields, never names, contact details or free text. Nothing identifies a person; age is a bucket. This is what `policies.json` `policy004` promises the customer.
 

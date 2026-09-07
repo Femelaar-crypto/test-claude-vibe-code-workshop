@@ -172,20 +172,65 @@
   .hist .m { font-size: 12.5px; color: var(--muted); margin-top: 2px; }
   .hist .c { font-size: 12.5px; color: var(--muted); white-space: nowrap; }
   .stats { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px; margin-bottom: 16px; }
-  @media (max-width: 860px) { .stats { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+  @media (max-width: 980px) { .stats { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
   .stat { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 14px 16px; }
   .stat .n { font-family: var(--display); font-size: 26px; font-weight: 700; font-variant-numeric: tabular-nums; line-height: 1.1; }
   .stat .l { font-size: 12px; color: var(--muted); margin-top: 4px; }
-  .tabs { display: flex; gap: 2px; border-bottom: 1px solid var(--border); margin-bottom: 14px; overflow-x: auto; }
-  .tab { background: none; border: none; padding: 10px 14px; min-height: 44px; color: var(--muted); font-weight: 500; cursor: pointer; border-bottom: 2px solid transparent; margin-bottom: -1px; white-space: nowrap; }
-  .tab:hover { color: var(--text); }
-  .tab.active { color: var(--accent-dark); border-bottom-color: var(--accent); font-weight: 600; }
-  .bar-row { display: grid; grid-template-columns: minmax(140px, 1fr) 2fr 44px; gap: 12px; align-items: center; padding: 6px 0; font-size: 13.5px; }
-  .bar-label { min-width: 0; }
-  .bar-sub { display: block; font-size: 12px; color: var(--muted); }
-  .bar-track { height: 8px; background: var(--surface-2); border-radius: 4px; overflow: hidden; }
-  .bar-fill { display: block; height: 100%; background: var(--accent); border-radius: 4px; }
-  .bar-n { text-align: right; font-variant-numeric: tabular-nums; font-weight: 500; }
+  .stat .d { display: block; margin-top: 2px; font-weight: 600; }
+  .stat .d.up { color: var(--danger); } .stat .d.down { color: var(--ok); }
+
+  /* filter bar */
+  .fbar { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin-bottom: 14px; }
+  .fchip { display: inline-flex; align-items: center; gap: 6px; background: var(--accent-soft); color: var(--accent-dark); border: 1px solid transparent; border-radius: 999px; padding: 6px 12px; font-size: 13px; cursor: pointer; min-height: 34px; }
+  .fchip:hover { border-color: var(--accent); }
+  .fchip b { font-weight: 600; }
+  .seg { display: inline-flex; border: 1px solid var(--border); border-radius: 10px; overflow: hidden; background: var(--surface); }
+  .segbtn { background: none; border: none; padding: 0 12px; min-height: 40px; font-size: 13px; color: var(--muted); cursor: pointer; }
+  .segbtn + .segbtn { border-left: 1px solid var(--border); }
+  .segbtn:hover { color: var(--text); }
+  .segbtn.on { background: var(--accent-soft); color: var(--accent-dark); font-weight: 600; }
+
+  /* dashboard grid */
+  .dash { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; align-items: start; margin-bottom: 20px; }
+  .dash .card { margin: 0; max-width: none; }
+  .dash .span2 { grid-column: span 2; }
+  @media (max-width: 980px) { .dash { grid-template-columns: 1fr; } .dash .span2 { grid-column: span 1; } }
+
+  /* linked bar rows */
+  .bar-row { display: grid; grid-template-columns: minmax(0, 1.5fr) minmax(60px, 1fr) 38px; gap: 10px; align-items: center; padding: 7px 6px; font-size: 13.5px; width: 100%; text-align: left; background: none; border: none; border-radius: 8px; cursor: pointer; color: inherit; }
+  .bar-row.static { cursor: default; }
+  .bar-row:not(.static):hover { background: var(--surface-2); }
+  .bar-row.sel { background: var(--accent-soft); }
+  .bar-row.sel .bar-label { color: var(--accent-dark); font-weight: 600; }
+  .bar-label { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .bar-track { height: 9px; background: var(--surface-2); border-radius: 5px; overflow: hidden; justify-self: stretch; }
+  .bar-fill { display: block; height: 100%; background: var(--accent); border-radius: 5px; transition: width .18s ease; }
+  .bar-n { text-align: right; font-variant-numeric: tabular-nums; font-weight: 600; }
+
+  /* cross-tab matrix */
+  .matrix { display: flex; flex-direction: column; gap: 3px; overflow-x: auto; }
+  .mx-row { display: grid; gap: 3px; align-items: stretch; min-width: 560px; }
+  .mx-head { font-size: 11.5px; color: var(--muted); text-transform: uppercase; letter-spacing: .04em; }
+  .mx-col, .mx-tot { display: flex; align-items: center; justify-content: center; text-align: center; }
+  .mx-head .mx-tot, .mx-corner { display: flex; align-items: center; justify-content: flex-end; }
+  .mx-tot { font-variant-numeric: tabular-nums; font-weight: 600; font-size: 13px; justify-content: flex-end; padding-right: 2px; }
+  .mx-rowlabel { text-align: left; background: none; border: none; padding: 0 6px 0 0; font-size: 13px; color: inherit; cursor: pointer; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; border-radius: 6px; min-height: 34px; }
+  .mx-rowlabel:hover { color: var(--accent-dark); }
+  .mx-rowlabel.sel { color: var(--accent-dark); font-weight: 700; }
+  .mx-cell { border: none; border-radius: 6px; min-height: 34px; font-size: 13px; font-variant-numeric: tabular-nums; font-weight: 600; cursor: pointer; display: flex; align-items: center; justify-content: center; }
+  .mx-cell:hover { outline: 2px solid var(--accent); outline-offset: -2px; }
+  .mx-cell.sel { outline: 2.5px solid var(--accent-dark); outline-offset: -2px; }
+
+  /* lift list */
+  .lift { display: flex; gap: 12px; align-items: baseline; padding: 9px 0; border-bottom: 1px solid var(--border); }
+  .lift:last-child { border-bottom: none; }
+  .lift-x { font-family: var(--display); font-weight: 700; font-size: 17px; color: var(--accent); font-variant-numeric: tabular-nums; min-width: 44px; }
+  .lift-t { display: flex; flex-direction: column; gap: 2px; font-size: 13.5px; }
+  .lift-d { font-size: 12px; color: var(--muted); }
+
+  /* tooltip */
+  #tip { position: fixed; z-index: 90; pointer-events: none; max-width: 260px; background: var(--text); color: var(--bg); font-size: 12.5px; line-height: 1.4; padding: 7px 10px; border-radius: 8px; box-shadow: var(--shadow); opacity: 0; transition: opacity .12s; }
+  #tip.on { opacity: 1; }
 
   .customer-card { max-width: 560px; }
   .customer-card .answer { font-size: 17px; }
@@ -248,6 +293,7 @@
   </div>
 </div>
 <div class="pop" id="pop" hidden></div>
+<div id="tip" role="status" aria-live="polite"></div>
 <div id="present" role="dialog" aria-label="Klantweergave op volledig scherm"></div>
 
 <script>
@@ -316,7 +362,8 @@ const shortName = p => p.name.replace(/\s*\(.*?\)\s*$/, '').replace(/\b\d+([.,]\
 
 /* ---------- state ---------- */
 const state = {
-  view: 'ask', phase: 'input', mode: 'sim', apiKey: '', insightTab: 'klachten', csvNotice: '',
+  view: 'ask', phase: 'input', mode: 'sim', apiKey: '', csvNotice: '',
+  period: 30, filters: { complaint: null, audience: null, category: null, outcome: null, escalation: null, duration: null, pregnant: null },
   question: '', ctx: null, gaps: [], result: null, history: [], liveNotice: '',
 };
 const STANDARD_CATEGORIES = [...new Set(PRODUCTS.map(p => p.category)), 'Beleid', 'Acties', 'Product opzoeken', 'Overig'];
@@ -781,7 +828,7 @@ function renderCustomer() {
   if (!r) return head + `<div class="card"><h2>Nog geen antwoord</h2><p class="muted" style="margin-top:6px">Stel eerst een vraag.</p><div class="row" style="margin-top:16px"><button class="btn-primary" data-action="new">Nieuwe vraag</button></div></div>`;
   return head + `<div class="card lift customer-card">${customerBlock(r, false)}</div>`;
 }
-/* ---------- analytics: structured log rows, no personal data ---------- */
+/* ---------- analytics: structured rows, no personal data ---------- */
 function audienceLabel(tr) {
   if (!tr.intended_for) return 'Onbekend';
   if (tr.intended_for === 'kind') return 'Kind ' + (tr.age_bucket ? tr.age_bucket + ' jaar' : '(leeftijd onbekend)');
@@ -793,36 +840,210 @@ function gapTerm(r) {
   const t = complaintLabel(r.triage).toLowerCase().replace(/[^a-zà-ÿ0-9 ]+/g, ' ').replace(/\s+/g, ' ').trim();
   return (!t || t.split(' ').length > 4 || t.length > 40) ? 'overig' : t;
 }
-function logRow(r) {
+const OUTCOME_LABEL = { recommended: 'Product aanbevolen', blocked: 'Geen veilig product', no_match: 'Niet in assortiment', answered: 'Beantwoord uit data', unknown: 'Geen informatie' };
+const ESC_LABEL = { none: 'Geen doorverwijzing', pharmacist: 'Apotheker', doctor: 'Huisarts', urgent: 'Huisarts, vandaag nog' };
+function rowOf(r, isSession) {
+  const tr = r.triage;
   return {
     at: r.at, question_type: r.qtype, category: r.category,
-    complaints: r.triage.complaints.join('|'), audience: audienceLabel(r.triage), pregnant: r.triage.pregnant ? 1 : 0,
-    duration: r.triage.duration || '', prior_remedies: r.triage.prior_remedies || '',
+    complaints: tr.complaints.length ? tr.complaints.slice() : (tr.complaint_raw ? [tr.complaint_raw] : []),
+    audience: audienceLabel(tr), pregnant: !!tr.pregnant,
+    duration: tr.duration || 'Niet vermeld', prior_remedies: tr.prior_remedies || 'Niet vermeld',
     outcome: r.outcome, escalation: r.escalation ? r.escalation.level : 'none',
-    recommended_id: r.recommended ? r.recommended.id : '', blocked_ids: (r.blocked || []).map(b => b.p.id).join('|'),
-    promo_id: r.promos && r.promos.length ? r.promos[0].id : '', assortment_gap: gapTerm(r),
+    recommended_id: r.recommended ? r.recommended.id : '', recommended_name: r.recommended ? shortName(r.recommended) : '',
+    blocked_ids: (r.blocked || []).map(b => b.p.id), blocked_names: (r.blocked || []).map(b => shortName(b.p)),
+    promo_id: r.promos && r.promos.length ? r.promos[0].id : '',
+    assortment_gap: gapTerm(r), session: !!isSession,
   };
 }
-function count(list, keyFn) {
+
+/* ---------- synthetic history: 60 days of anonymous log rows -----------------
+   Generated through the real engine (search + safety + escalation), so the
+   dashboard can never show a combination the rules would not produce. Audience
+   and complaint are correlated on purpose: that is what the cross-filter shows. */
+function mulberry32(a) { return function () { a |= 0; a = a + 0x6D2B79F5 | 0; let t = Math.imul(a ^ a >>> 15, 1 | a); t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; }; }
+function weighted(weights, rnd) {
+  const keys = Object.keys(weights); let tot = 0;
+  for (const k of keys) tot += weights[k];
+  let x = rnd() * tot;
+  for (const k of keys) { x -= weights[k]; if (x <= 0) return k; }
+  return keys[keys.length - 1];
+}
+const PROFILES = [
+  { w: 40, intended_for: 'mezelf', age_bucket: 'volwassen', complaints: { hoofdpijn: 26, verkoudheid: 14, slaapproblemen: 12, vermoeidheid: 10, spierpijn: 9, keelpijn: 8, menstruatiepijn: 8, hoest: 6, huidirritatie: 6, weerstand: 5, 'droge huid': 4, acne: 4 } },
+  { w: 13, intended_for: 'partner', age_bucket: 'volwassen', complaints: { spierpijn: 18, hoest: 16, rugpijn: 14, hoofdpijn: 14, verkoudheid: 14, 'stoppen met roken': 14, keelpijn: 10 } },
+  { w: 11, intended_for: 'kind', age_bucket: '0-5', complaints: { koorts: 30, verkoudheid: 20, diarree: 14, huidirritatie: 14, wond: 12, braken: 10 } },
+  { w: 12, intended_for: 'kind', age_bucket: '6-11', complaints: { keelpijn: 24, verkoudheid: 22, koorts: 18, wond: 16, hoest: 14, huidirritatie: 6 } },
+  { w: 9, intended_for: 'kind', age_bucket: '12-17', complaints: { acne: 44, hoofdpijn: 18, spierpijn: 14, keelpijn: 10, slaapproblemen: 8, wond: 6 } },
+  { w: 15, intended_for: 'ander', age_bucket: 'volwassen', complaints: { gewrichtspijn: 28, slaapproblemen: 20, verkoudheid: 14, vermoeidheid: 14, hoofdpijn: 12, weerstand: 6, 'droge huid': 6 } },
+];
+const LONG_RUNNING = new Set(['acne', 'gewrichtspijn', 'slaapproblemen', 'vermoeidheid', 'droge huid', 'stoppen met roken', 'weerstand']);
+const SHORT_RUNNING = new Set(['koorts', 'wond', 'braken', 'diarree', 'zonnebrand']);
+const GAP_TERMS = { wratten: 5, kater: 4, oorpijn: 4, kalknagel: 3, aambeien: 3, voetschimmel: 3 };
+function synthRow(rnd, at) {
+  const kind = weighted({ symptom: 78, policy: 8, promo: 7, lookup: 7 }, rnd);
+  const base = { question: '', t: '', qtype: kind, tags: [], productIds: [], categories: [], policyHits: [] };
+  const triage = { intended_for: null, age_bucket: null, age: null, pregnant: false, complaints: [], complaint_raw: '', duration: null, prior_remedies: null, prior_failed: false, tried_ingredient: null, tried_product_ids: [], complete: true };
+  if (kind === 'policy') { const p = POLICIES[Math.floor(rnd() * POLICIES.length)]; base.policyHits = [p]; }
+  else if (kind === 'lookup') { const p = PRODUCTS[Math.floor(rnd() * PRODUCTS.length)]; base.productIds = [p.id]; }
+  else if (kind === 'symptom') {
+    const prof = PROFILES[(() => { let x = rnd() * PROFILES.reduce((s, p) => s + p.w, 0); for (let i = 0; i < PROFILES.length; i++) { x -= PROFILES[i].w; if (x <= 0) return i; } return 0; })()];
+    triage.intended_for = prof.intended_for; triage.age_bucket = prof.age_bucket;
+    const gap = rnd() < 0.05;
+    const tag = gap ? weighted(GAP_TERMS, rnd) : weighted(prof.complaints, rnd);
+    triage.complaints = [tag];
+    triage.duration = weighted(LONG_RUNNING.has(tag) ? { 'al langere tijd': 45, 'een week of langer': 30, 'een paar dagen': 20, vandaag: 5 }
+      : SHORT_RUNNING.has(tag) ? { vandaag: 50, 'een paar dagen': 35, 'een week of langer': 12, 'al langere tijd': 3 }
+        : { vandaag: 22, 'een paar dagen': 42, 'een week of langer': 24, 'al langere tijd': 12 }, rnd);
+    triage.prior_remedies = weighted(LONG_RUNNING.has(tag) ? { 'iets zonder recept': 45, 'iets op recept': 20, 'nog niets': 27, 'weet niet': 8 }
+      : { 'nog niets': 52, 'iets zonder recept': 32, 'iets op recept': 9, 'weet niet': 7 }, rnd);
+    if (triage.prior_remedies === 'iets zonder recept') triage.prior_failed = rnd() < 0.4;
+    if ((prof.intended_for === 'mezelf' || prof.intended_for === 'partner')) triage.pregnant = rnd() < (['hoofdpijn', 'vermoeidheid', 'verkoudheid'].includes(tag) ? 0.13 : 0.04);
+    base.tags = triage.complaints;
+  }
+  base.triage = triage;
+  const r = resolve(base);
+  r.at = at;
+  return rowOf(r, false);
+}
+function buildHistoryRows() {
+  const rnd = mulberry32(20260907), rows = [];
+  for (let day = 60; day >= 1; day--) {
+    const d = new Date(TODAY); d.setDate(d.getDate() - day);
+    const dow = d.getDay();
+    if (dow === 0) continue; // closed on Sundays
+    const n = Math.round((dow === 6 ? 7 : 4) + rnd() * 4);
+    for (let i = 0; i < n; i++) {
+      const h = 9 + Math.floor(rnd() * 9), m = Math.floor(rnd() * 60);
+      const at = new Date(d); at.setHours(h, m, 0, 0);
+      rows.push(synthRow(rnd, at.toISOString()));
+    }
+  }
+  return rows;
+}
+let HISTORY_ROWS = [];
+
+/* ---------- dashboard: linked filters over the log rows ---------- */
+const DIMS = {
+  complaint: { label: 'Klacht', values: r => r.complaints },
+  audience: { label: 'Doelgroep', values: r => [r.audience] },
+  category: { label: 'Categorie', values: r => [r.category] },
+  outcome: { label: 'Uitkomst', values: r => [OUTCOME_LABEL[r.outcome] || r.outcome] },
+  escalation: { label: 'Doorverwijzing', values: r => [ESC_LABEL[r.escalation] || r.escalation] },
+  duration: { label: 'Sinds wanneer', values: r => [cap(r.duration)] },
+};
+function allRows() {
+  const session = state.history.map(r => rowOf(r, true));
+  return HISTORY_ROWS.concat(session).sort((a, b) => (a.at < b.at ? 1 : -1));
+}
+function inPeriod(rows) {
+  if (state.period === 0) return rows;
+  const cut = new Date(TODAY); cut.setDate(cut.getDate() - state.period); cut.setHours(0, 0, 0, 0);
+  return rows.filter(r => new Date(r.at) >= cut);
+}
+function matches(row, skipDim) {
+  for (const [dim, val] of Object.entries(state.filters)) {
+    if (val == null || dim === skipDim) continue;
+    if (dim === 'pregnant') { if (!row.pregnant) return false; continue; }
+    if (!DIMS[dim].values(row).includes(val)) return false;
+  }
+  return true;
+}
+function tally(rows, dim) {
   const m = new Map();
-  for (const x of list) { const k = keyFn(x); if (k == null || k === '') continue; for (const kk of (Array.isArray(k) ? k : [k])) m.set(kk, (m.get(kk) || 0) + 1); }
-  return [...m.entries()].sort((a, b) => b[1] - a[1] || String(a[0]).localeCompare(String(b[0])));
+  for (const r of rows) for (const v of DIMS[dim].values(r)) { if (!v) continue; m.set(v, (m.get(v) || 0) + 1); }
+  return m;
 }
-function bars(entries, total, opts = {}) {
-  if (!entries.length) return '<p class="muted small">Nog geen gegevens</p>';
-  const max = entries[0][1];
-  return entries.map(([k, n]) => `<div class="bar-row" title="${n} van ${total} (${total ? Math.round(n / total * 100) : 0}%)"><span class="bar-label">${esc(cap(String(k)))}${opts.sub && opts.sub[k] ? `<span class="bar-sub">${esc(opts.sub[k])}</span>` : ''}</span><span class="bar-track"><span class="bar-fill" style="width:${Math.max(3, n / max * 100)}%"></span></span><span class="bar-n">${n}</span></div>`).join('');
+function pctLabel(n, d) { return d ? Math.round(n / d * 100) + '%' : '0%'; }
+
+function panelHtml(dim, baseRows, opts = {}) {
+  const scope = baseRows.filter(r => matches(r, dim));
+  const cur = tally(scope, dim), all = tally(baseRows, dim);
+  const entries = [...all.entries()].sort((a, b) => (cur.get(b[0]) || 0) - (cur.get(a[0]) || 0) || b[1] - a[1]).slice(0, opts.limit || 8);
+  if (!entries.length) return '<p class="muted small">Geen gegevens in deze periode</p>';
+  const max = Math.max(...entries.map(e => e[1]));
+  const sel = state.filters[dim];
+  return entries.map(([k, total]) => {
+    const n = cur.get(k) || 0;
+    const isSel = sel === k;
+    return `<button class="bar-row${isSel ? ' sel' : ''}" data-filter="${dim}" data-value="${esc(k)}" aria-pressed="${isSel}" data-tip="${esc(k)} — ${n} van ${total} vragen in deze periode (${pctLabel(n, total)})">
+      <span class="bar-label">${esc(cap(String(k)))}</span>
+      <span class="bar-track" style="width:${Math.max(6, total / max * 100)}%"><span class="bar-fill" style="width:${total ? n / total * 100 : 0}%"></span></span>
+      <span class="bar-n">${n}</span></button>`;
+  }).join('');
 }
-function buildCsv() {
+
+function matrixHtml(baseRows) {
+  const scope = baseRows.filter(r => matches(r, 'complaint') && matches(r, 'audience'));
+  const comps = [...tally(scope, 'complaint').entries()].sort((a, b) => b[1] - a[1]).slice(0, 8).map(e => e[0]);
+  // only audiences that actually carry a complaint: non-symptom rows have none
+  const withComplaint = scope.filter(r => r.complaints.length);
+  const AUD_ORDER = ['Klant zelf', 'Partner', 'Andere volwassene', 'Kind 0-5 jaar', 'Kind 6-11 jaar', 'Kind 12-17 jaar'];
+  const present = tally(withComplaint, 'audience');
+  const auds = AUD_ORDER.filter(a => present.get(a)).concat([...present.keys()].filter(a => !AUD_ORDER.includes(a)));
+  if (!comps.length || !auds.length) return '<p class="muted small">Geen gegevens in deze periode</p>';
+  const cell = {}; let max = 0;
+  for (const r of scope) for (const c of r.complaints) { if (!comps.includes(c)) continue; const k = c + '||' + r.audience; cell[k] = (cell[k] || 0) + 1; if (cell[k] > max) max = cell[k]; }
+  const short = a => a.replace('Kind ', '').replace(' jaar', '').replace('Andere volwassene', 'Ander').replace('Klant zelf', 'Zelf');
+  const grid = ` style="grid-template-columns:136px repeat(${auds.length}, minmax(42px, 1fr)) 54px"`;
+  const head = `<div class="mx-row mx-head"${grid}><span class="mx-corner"></span>${auds.map(a => `<span class="mx-col" data-tip="${esc(a)}">${esc(short(a))}</span>`).join('')}<span class="mx-tot">Totaal</span></div>`;
+  const body = comps.map(c => {
+    const rowTot = scope.filter(r => r.complaints.includes(c)).length;
+    const cells = auds.map(a => {
+      const n = cell[c + '||' + a] || 0;
+      const pct = max ? n / max : 0;
+      const strong = pct > 0.55;
+      const on = state.filters.complaint === c && state.filters.audience === a;
+      return `<button class="mx-cell${on ? ' sel' : ''}" data-cell="${esc(c)}||${esc(a)}" style="background:color-mix(in oklab, var(--accent) ${Math.round(pct * 82)}%, var(--surface-2)); color:${strong ? 'var(--on-accent)' : 'var(--text)'}" data-tip="${esc(cap(c))} bij ${esc(a)} — ${n} ${n === 1 ? 'vraag' : 'vragen'}, ${pctLabel(n, rowTot)} van alle ${esc(c)}-vragen">${n || ''}</button>`;
+    }).join('');
+    return `<div class="mx-row"${grid}><button class="mx-rowlabel${state.filters.complaint === c ? ' sel' : ''}" data-filter="complaint" data-value="${esc(c)}" data-tip="Filter op ${esc(c)}">${esc(cap(c))}</button>${cells}<span class="mx-tot">${rowTot}</span></div>`;
+  }).join('');
+  return `<div class="matrix">${head}${body}</div>`;
+}
+
+// Which attributes are over-represented in the current selection, versus the period as a whole.
+function liftHtml(baseRows, filtered) {
+  if (!hasFilters()) return `<p class="muted small">Klik op een klacht, doelgroep of uitkomst hiernaast. Alle panelen en de kruistabel filteren mee, en hier verschijnt wat aan die groep opvalt.</p>`;
+  if (filtered.length < 8) return `<p class="muted small">Te weinig vragen in deze selectie (${filtered.length}) voor een betrouwbaar profiel. Verruim de periode of het filter.</p>`;
+  const out = [];
+  for (const dim of ['audience', 'duration', 'outcome', 'escalation', 'category', 'complaint']) {
+    if (state.filters[dim] != null) continue;
+    const sub = tally(filtered, dim), base = tally(baseRows, dim);
+    for (const [k, n] of sub.entries()) {
+      if (n < 3) continue;
+      if (dim === 'escalation' && k === ESC_LABEL.none) continue;
+      const share = n / filtered.length, baseShare = (base.get(k) || 0) / baseRows.length;
+      if (baseShare <= 0) continue;
+      const lift = share / baseShare;
+      if (lift >= 1.4) out.push({ dim, k, n, share, lift });
+    }
+  }
+  const preg = filtered.filter(r => r.pregnant).length;
+  if (preg >= 3) {
+    const bs = baseRows.filter(r => r.pregnant).length / baseRows.length;
+    if (bs > 0 && (preg / filtered.length) / bs >= 1.4) out.push({ dim: 'pregnant', k: 'Zwanger of borstvoeding', n: preg, share: preg / filtered.length, lift: (preg / filtered.length) / bs });
+  }
+  out.sort((a, b) => b.lift - a.lift);
+  if (!out.length) return `<p class="muted small">Deze selectie wijkt niet noemenswaardig af van het gemiddelde in deze periode.</p>`;
+  return out.slice(0, 5).map(o => `<div class="lift"><span class="lift-x">${o.lift.toFixed(1)}×</span><span class="lift-t"><strong>${esc(o.k)}</strong><span class="lift-d">${DIMS[o.dim] ? DIMS[o.dim].label : 'Kenmerk'} · ${o.n} vragen · ${Math.round(o.share * 100)}% van deze selectie</span></span></div>`).join('');
+}
+
+function hasFilters() { return Object.values(state.filters).some(v => v != null); }
+function filterChips() {
+  const chips = Object.entries(state.filters).filter(([, v]) => v != null)
+    .map(([dim, v]) => `<button class="fchip" data-filter="${dim}" data-value="${esc(v)}" data-tip="Filter verwijderen">${esc(dim === 'pregnant' ? 'Zwanger of borstvoeding' : DIMS[dim].label)}: <b>${esc(cap(String(v)))}</b> ${icon('i-x', 'icon sm')}</button>`).join('');
+  return `<div class="fbar"><span class="label" style="margin:0">Filter</span>${chips || '<span class="muted small">geen, je ziet alle vragen</span>'}${hasFilters() ? `<button class="link" data-action="clearf">Alles wissen</button>` : ''}</div>`;
+}
+
+function buildCsv(rows) {
   const cols = ['at', 'question_type', 'category', 'complaints', 'audience', 'pregnant', 'duration', 'prior_remedies', 'outcome', 'escalation', 'recommended_id', 'blocked_ids', 'promo_id', 'assortment_gap'];
-  const q = v => '"' + String(v ?? '').replace(/"/g, '""') + '"';
-  const lines = [cols.join(',')].concat([...state.history].reverse().map(r => { const row = logRow(r); return cols.map(c => q(row[c])).join(','); }));
-  return '﻿' + lines.join('\n');
+  const q = v => '"' + String(Array.isArray(v) ? v.join('|') : v ?? '').replace(/"/g, '""') + '"';
+  return '﻿' + [cols.join(',')].concat(rows.map(r => cols.map(c => q(c === 'pregnant' ? (r.pregnant ? 1 : 0) : r[c])).join(','))).join('\n');
 }
 async function exportCsv() {
-  const csv = buildCsv(), filename = 'drugstore-inzichten.csv';
+  const rows = inPeriod(allRows()).filter(r => matches(r));
+  const csv = buildCsv(rows), filename = 'drugstore-inzichten.csv';
   state.csvNotice = '';
-  // Hosted viewer: the page may not download directly, so ask the platform to save.
   let dl = null;
   try { if (window.claude && typeof window.claude.use === 'function') dl = await window.claude.use('downloads'); } catch (e) { dl = null; }
   if (dl) {
@@ -830,7 +1051,6 @@ async function exportCsv() {
     catch (e) { if (!e || e.code !== 'declined') { state.csvNotice = 'Exporteren lukte niet' + (e && e.message ? ': ' + e.message : '') + '.'; render(); } }
     return;
   }
-  // Local file: an ordinary download link.
   try {
     const a = document.createElement('a');
     a.href = URL.createObjectURL(new Blob([csv], { type: 'text/csv;charset=utf-8' }));
@@ -838,54 +1058,56 @@ async function exportCsv() {
     setTimeout(() => URL.revokeObjectURL(a.href), 1000);
   } catch (e) { state.csvNotice = 'Exporteren lukte niet: ' + e.message + '.'; render(); }
 }
-function renderInsights() {
-  const H = state.history, N = H.length, tab = state.insightTab;
-  const sym = H.filter(r => r.qtype === 'symptom');
-  if (tab === 'klachten') return bars(count(H, r => r.triage.complaints.length ? r.triage.complaints : (r.qtype === 'symptom' && r.triage.complaint_raw ? r.triage.complaint_raw : null)), N);
-  if (tab === 'categorieen') return bars(count(H, r => r.category), N) + `<p class="muted small" style="margin-top:12px">Vaste categorieën: ${STANDARD_CATEGORIES.join(', ')}.</p>`;
-  if (tab === 'doelgroep') {
-    const byAud = count(sym, r => audienceLabel(r.triage));
-    const sub = {};
-    for (const [aud] of byAud) { const top = count(sym.filter(r => audienceLabel(r.triage) === aud), r => r.triage.complaints.length ? r.triage.complaints : (r.triage.complaint_raw || null))[0]; sub[aud] = top ? 'meest gevraagd: ' + top[0] : ''; }
-    return bars(byAud, sym.length, { sub }) + `<p class="muted small" style="margin-top:12px">Zwangerschap of borstvoeding vermeld bij ${sym.filter(r => r.triage.pregnant).length} van ${sym.length} symptoomvragen. Leeftijd wordt alleen als groep bewaard.</p>`;
-  }
-  if (tab === 'uitkomsten') {
-    const OUT = { recommended: 'Product aanbevolen', blocked: 'Geen veilig product', no_match: 'Niet in assortiment', answered: 'Beantwoord uit beleid, acties of assortiment', unknown: 'Geen informatie beschikbaar' };
-    const ESC = { pharmacist: 'Apotheker', doctor: 'Huisarts', urgent: 'Huisarts, vandaag nog' };
-    return bars(count(H, r => OUT[r.outcome] || r.outcome), N)
-      + `<div class="label" style="margin:18px 0 8px">Doorverwijzingen</div>` + bars(count(H.filter(r => r.escalation && r.escalation.level !== 'none'), r => ESC[r.escalation.level]), N)
-      + `<div class="label" style="margin:18px 0 8px">Assortimentshiaten: gevraagd, niet in assortiment</div>` + bars(count(H.filter(r => r.outcome === 'no_match' && r.qtype === 'symptom'), r => complaintLabel(r.triage)), N);
-  }
-  if (tab === 'producten') {
-    const recs = sym.filter(r => r.recommended);
-    return `<div class="label" style="margin-bottom:8px">Meest aanbevolen</div>` + bars(count(recs, r => r.recommended.name), N)
-      + `<div class="label" style="margin:18px 0 8px">Meest geblokkeerd door veiligheidsregels</div>` + bars(count(H, r => (r.blocked || []).map(b => b.p.name)), N)
-      + `<p class="muted small" style="margin-top:12px">Actie getoond bij ${recs.filter(r => r.promos.length).length} van ${recs.length} aanbevelingen.</p>`;
-  }
-  return '';
+
+function kpi(filtered, baseRows) {
+  const f = n => pctLabel(n, filtered.length);
+  const delta = (n, total) => {
+    if (!hasFilters() || !filtered.length || !baseRows.length) return '';
+    const d = Math.round(n / filtered.length * 100) - Math.round(total / baseRows.length * 100);
+    if (Math.abs(d) < 3) return '<span class="d">gelijk aan gemiddeld</span>';
+    return `<span class="d ${d > 0 ? 'up' : 'down'}">${d > 0 ? '+' : ''}${d} punten t.o.v. gemiddeld</span>`;
+  };
+  const ref = r => r.escalation !== 'none', gap = r => r.outcome === 'no_match', promo = r => !!r.promo_id;
+  const c = (rows, fn) => rows.filter(fn).length;
+  return `<div class="stats">
+    <div class="stat"><div class="n">${filtered.length}</div><div class="l">${hasFilters() ? `van ${baseRows.length} vragen in selectie` : 'vragen in deze periode'}</div></div>
+    <div class="stat"><div class="n">${f(c(filtered, ref))}</div><div class="l">Doorverwezen ${delta(c(filtered, ref), c(baseRows, ref))}</div></div>
+    <div class="stat"><div class="n">${f(c(filtered, gap))}</div><div class="l">Niet in assortiment ${delta(c(filtered, gap), c(baseRows, gap))}</div></div>
+    <div class="stat"><div class="n">${f(c(filtered, promo))}</div><div class="l">Met actie ${delta(c(filtered, promo), c(baseRows, promo))}</div></div>
+  </div>`;
 }
+
 function renderHistory() {
-  const H = state.history, N = H.length;
-  const pct = n => N ? Math.round(n / N * 100) + '%' : '0%';
-  const referred = H.filter(r => r.escalation && r.escalation.level !== 'none').length;
-  const gaps = H.filter(r => r.outcome === 'no_match').length;
-  const withPromo = H.filter(r => r.promos && r.promos.length).length;
-  const tabs = [['klachten', 'Klachten'], ['categorieen', 'Categorieën'], ['doelgroep', 'Doelgroep'], ['uitkomsten', 'Uitkomsten'], ['producten', 'Producten']];
-  const outcomeShort = r => r.qtype === 'symptom' ? (r.recommended ? shortName(r.recommended) : r.outcome === 'no_match' ? 'niet in assortiment' : 'geen veilig product') : { policy: 'beleid', promo: 'actie', lookup: r.recommended ? shortName(r.recommended) : 'niet gevonden', unknown: 'onbekend' }[r.qtype];
-  return `<div class="view-head"><div><h1>Geschiedenis</h1><p class="muted">Vragen uit deze sessie en wat de winkel eruit kan leren. Geen persoonsgegevens: alleen categorieën, uitkomsten en leeftijdsgroepen.</p></div><button class="btn-outline" data-action="csv">${icon('i-download', 'icon sm')}Exporteer CSV</button></div>
+  const rows = allRows(), baseRows = inPeriod(rows), filtered = baseRows.filter(r => matches(r));
+  const periods = [[7, '7 dagen'], [30, '30 dagen'], [60, '60 dagen']];
+  const gaps = filtered.filter(r => r.assortment_gap);
+  const gapTally = [...tally(gaps.map(r => ({ ...r, complaints: [r.assortment_gap] })), 'complaint').entries()].sort((a, b) => b[1] - a[1]).slice(0, 6);
+  return `<div class="view-head">
+      <div><h1>Inzichten</h1><p class="muted">${rows.length} geregistreerde vragen. Klik op een waarde om te filteren; alle panelen tonen dan die groep. Geen persoonsgegevens: alleen categorieën, leeftijdsgroepen en uitkomsten.</p></div>
+      <div class="row">
+        <div class="seg">${periods.map(([d, l]) => `<button class="segbtn ${state.period === d ? 'on' : ''}" data-period="${d}">${l}</button>`).join('')}</div>
+        <button class="btn-outline" data-action="csv">${icon('i-download', 'icon sm')}CSV</button>
+      </div>
+    </div>
     ${state.csvNotice ? `<div class="banner info">${icon('i-alert')}<div>${esc(state.csvNotice)}</div></div>` : ''}
-    <div class="stats">
-      <div class="stat"><div class="n">${N}</div><div class="l">Vragen</div></div>
-      <div class="stat"><div class="n">${pct(referred)}</div><div class="l">Doorverwezen</div></div>
-      <div class="stat"><div class="n">${pct(gaps)}</div><div class="l">Niet in assortiment</div></div>
-      <div class="stat"><div class="n">${pct(withPromo)}</div><div class="l">Met actie</div></div>
+    ${filterChips()}
+    ${kpi(filtered, baseRows)}
+    <div class="dash">
+      <div class="card span2"><div class="label" style="margin-bottom:12px">Klacht × doelgroep${hasFilters() ? ' · binnen selectie' : ''}</div>${matrixHtml(baseRows)}<p class="muted small" style="margin-top:12px">Donkerder is vaker. Klik een cel om op die combinatie te filteren.</p></div>
+      <div class="card"><div class="label" style="margin-bottom:12px">Opvallend aan deze selectie</div>${liftHtml(baseRows, filtered)}</div>
+      <div class="card"><div class="label" style="margin-bottom:10px">Klachten</div>${panelHtml('complaint', baseRows)}</div>
+      <div class="card"><div class="label" style="margin-bottom:10px">Doelgroep</div>${panelHtml('audience', baseRows)}</div>
+      <div class="card"><div class="label" style="margin-bottom:10px">Uitkomst</div>${panelHtml('outcome', baseRows)}</div>
+      <div class="card"><div class="label" style="margin-bottom:10px">Doorverwijzing</div>${panelHtml('escalation', baseRows)}</div>
+      <div class="card"><div class="label" style="margin-bottom:10px">Categorie</div>${panelHtml('category', baseRows)}</div>
+      <div class="card"><div class="label" style="margin-bottom:10px">Sinds wanneer</div>${panelHtml('duration', baseRows)}</div>
+      <div class="card span2"><div class="label" style="margin-bottom:10px">Gevraagd, niet in assortiment</div>
+        ${gapTally.length ? gapTally.map(([k, n]) => `<div class="bar-row static" data-tip="${esc(k)} — ${n} keer gevraagd, niets in het assortiment"><span class="bar-label">${esc(cap(k))}</span><span class="bar-track" style="width:${n / gapTally[0][1] * 100}%"><span class="bar-fill" style="width:100%"></span></span><span class="bar-n">${n}</span></div>`).join('') : '<p class="muted small">Geen hiaten in deze selectie</p>'}
+        <p class="muted small" style="margin-top:12px">Wat klanten vroegen en de winkel niet verkoopt. Dit is de inkooplijst.</p></div>
     </div>
-    <div class="card"><div class="label" style="margin-bottom:6px">Inzichten</div>
-      <div class="tabs" role="tablist">${tabs.map(([id, l]) => `<button class="tab ${state.insightTab === id ? 'active' : ''}" role="tab" aria-selected="${state.insightTab === id}" data-tab="${id}">${l}</button>`).join('')}</div>
-      ${renderInsights()}
-    </div>
-    <div class="card"><div class="label" style="margin-bottom:6px">Vragen, klik om opnieuw te openen</div>${N ? H.map((r, i) => `<button class="hist" data-hist="${i}"><div><div class="q">${esc(r.question)}</div><div class="m">${esc(r.timestamp)} · ${esc(r.category)}${r.escalation && r.escalation.level !== 'none' ? ' · doorverwezen' : ''}${r.mode === 'live' ? ' · Claude' : ''}</div></div><div class="c">${esc(outcomeShort(r))}</div></button>`).join('') : '<p class="muted">Nog geen vragen gesteld.</p>'}</div>`;
+    <div class="card"><div class="label" style="margin-bottom:6px">Vragen uit deze sessie, klik om opnieuw te openen</div>${state.history.length ? state.history.map((r, i) => `<button class="hist" data-hist="${i}"><div><div class="q">${esc(r.question)}</div><div class="m">${esc(r.timestamp)} · ${esc(r.category)}${r.escalation && r.escalation.level !== 'none' ? ' · doorverwezen' : ''}${r.mode === 'live' ? ' · Claude' : ''}</div></div><div class="c">${esc(r.qtype === 'symptom' ? (r.recommended ? shortName(r.recommended) : r.outcome === 'no_match' ? 'niet in assortiment' : 'geen veilig product') : { policy: 'beleid', promo: 'actie', lookup: r.recommended ? shortName(r.recommended) : 'niet gevonden', unknown: 'onbekend' }[r.qtype])}</div></button>`).join('') : '<p class="muted">Nog geen vragen gesteld.</p>'}</div>`;
 }
+
 function renderSettings() {
   const pop = document.getElementById('pop');
   if (pop.hidden) return;
@@ -911,12 +1133,14 @@ function openPresent() {
 
 /* ---------- events ---------- */
 document.addEventListener('click', e => {
-  const b = e.target.closest('[data-view],[data-action],[data-example],[data-gap],[data-hist],[data-tab]');
+  const b = e.target.closest('[data-view],[data-action],[data-example],[data-gap],[data-hist],[data-filter],[data-cell],[data-period]');
   if (!b) { if (!e.target.closest('#pop') && !e.target.closest('#settingsBtn')) { const pop = document.getElementById('pop'); if (!pop.hidden) { pop.hidden = true; } } return; }
   if (b.dataset.view) { state.view = b.dataset.view; render(); return; }
   if (b.dataset.example) { state.view = 'ask'; state.phase = 'input'; state.question = b.dataset.example; render(); startQuestion(b.dataset.example); return; }
   if (b.dataset.hist !== undefined) { state.result = state.history[+b.dataset.hist]; state.view = 'employee'; render(); return; }
-  if (b.dataset.tab) { state.insightTab = b.dataset.tab; render(); return; }
+  if (b.dataset.filter) { const d = b.dataset.filter, v = b.dataset.value; state.filters[d] = state.filters[d] === v ? null : v; hideTip(); render(); return; }
+  if (b.dataset.cell) { const [c, a] = b.dataset.cell.split('||'); const on = state.filters.complaint === c && state.filters.audience === a; state.filters.complaint = on ? null : c; state.filters.audience = on ? null : a; hideTip(); render(); return; }
+  if (b.dataset.period) { state.period = +b.dataset.period; render(); return; }
   if (b.dataset.gap && b.dataset.value !== undefined) { answerGap(b.dataset.gap, b.dataset.value); return; }
   const a = b.dataset.action;
   if (a === 'send') { const q = document.getElementById('q').value.trim(); if (q) startQuestion(q); }
@@ -924,9 +1148,26 @@ document.addEventListener('click', e => {
   if (a === 'new') reset();
   if (a === 'present') openPresent();
   if (a === 'csv') exportCsv();
+  if (a === 'clearf') { for (const k of Object.keys(state.filters)) state.filters[k] = null; render(); }
   if (a === 'closePresent') document.getElementById('present').classList.remove('on');
   if (a === 'closeSettings') document.getElementById('pop').hidden = true;
 });
+/* tooltip layer for the dashboard marks */
+const tipEl = document.getElementById('tip');
+function hideTip() { tipEl.classList.remove('on'); }
+document.addEventListener('mousemove', e => {
+  const t = e.target.closest('[data-tip]');
+  if (!t) { hideTip(); return; }
+  tipEl.textContent = t.dataset.tip;
+  tipEl.classList.add('on');
+  const r = tipEl.getBoundingClientRect();
+  let x = e.clientX + 14, y = e.clientY + 16;
+  if (x + r.width > innerWidth - 8) x = e.clientX - r.width - 14;
+  if (y + r.height > innerHeight - 8) y = e.clientY - r.height - 14;
+  tipEl.style.left = Math.max(8, x) + 'px'; tipEl.style.top = Math.max(8, y) + 'px';
+});
+document.addEventListener('scroll', hideTip, true);
+
 document.getElementById('settingsBtn').addEventListener('click', () => { const pop = document.getElementById('pop'); pop.hidden = !pop.hidden; renderSettings(); });
 document.addEventListener('change', e => {
   if (e.target.name === 'mode') { state.mode = e.target.value; renderSidebar(); }
@@ -961,6 +1202,7 @@ seed('Ik ben zwanger en heb sinds vanochtend hoofdpijn, nog niets genomen', {}, 
 seed('Mijn zoon van 8 heeft sinds gisteren keelpijn, we hebben nog niets geprobeerd', {}, 0, '09:35');
 seed('Mijn partner wil stoppen met roken, hij heeft eerder pleisters geprobeerd', { duration: 'een week of langer' }, 0, '10:20');
 state.result = state.history[0];
+HISTORY_ROWS = buildHistoryRows();
 render();
 </script>
 </body>

@@ -20,7 +20,7 @@ The reference implementation of everything below is `demo/template.html`. When t
 9. **Employee View**: escalation banner first, then answer, triage summary, safety checks (passed and blocked), recommendation with usage, promotion and disclaimer, alternatives, policies, sources as record ids.
 10. **Customer View**: product, price (promo price when `type == percent_off`), short answer, promotion, age note. Presentation mode fills the screen and hides all employee chrome.
 11. **Log** (`services/analytics_service.py`): every `QueryResult` becomes one structured row (category, complaints, audience bucket, outcome, escalation, record ids, assortment gap). Never the question text, never personal data.
-12. **History**: every `QueryResult`, reopenable, plus **Inzichten**: a summary strip (questions, referral rate, not-in-assortment rate, promotion rate) and five sub-tabs over the log rows: Klachten, Categorieën, Doelgroep, Uitkomsten, Producten. CSV export of the rows.
+12. **Inzichten**: one linked dashboard over the log rows. A period control, a filter bar, a KPI strip with deltas against the period average, a klacht × doelgroep matrix, an over-representation ("Opvallend") panel, six cross-filtered panels, and the assortment-gap list. Every panel filters every other; a panel never filters itself, so you can switch value within a dimension. The reopenable session questions sit below it. CSV export covers the current selection only.
 
 ## Categories
 
@@ -28,7 +28,9 @@ One closed list, so counts stay comparable over time: the product categories in 
 
 ## Analytics forms
 
-Counts are ranked lists with a proportional bar, one hue, count on the right and the share in the row's tooltip. Never a pie, never a second y-axis. Every bar row is also readable as text (label plus number), so the colour carries no information on its own.
+Counts are ranked lists with a proportional bar, one hue, count on the right and the share in the row's tooltip. The bar shows the filtered subset as a fill inside the period total, so selection and baseline read together. The matrix uses one light-to-dark green ramp for count and always prints the number. Never a pie, never a second y-axis. Every row is readable as text (label plus number), so colour carries no information on its own.
+
+Small numbers are handled explicitly: the over-representation panel stays silent below eight rows in the selection or three occurrences of a value, rather than presenting a ratio built on two questions.
 
 ## Data Layer
 
