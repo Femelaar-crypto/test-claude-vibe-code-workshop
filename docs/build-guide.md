@@ -26,10 +26,14 @@ Port `applySafety` and `decideEscalation` into `services/safety_service.py` with
 Implement `services/ai_service.py`: send the structured outcome to Claude (see the demo's `LIVE_SYSTEM` and JSON-schema output), receive `employee_answer` and `customer_answer`. Keep a templated fallback for when the API fails.
 **Done when:** both views come back in Dutch, the customer view contains no record ids, and a blocked product is never recommended. Run `answer-quality-reviewer` again.
 
-## Milestone 7: Employee, customer and history pages
-Build `pages/2_employee_answer.py` (escalation banner, checks, blocked, alternatives, sources), `pages/3_customer_view.py` (large type, presentation mode) and `pages/4_history.py` (reopen, most asked from the session).
+## Milestone 7: Employee and customer pages
+Build `pages/2_employee_answer.py` (escalation banner, checks, blocked, alternatives, sources) and `pages/3_customer_view.py` (large type, presentation mode).
 **Done when:** the employee can turn the screen to the customer without any internal information visible.
 
-## Milestone 8: Polish
+## Milestone 8: History and analytics
+Implement `services/analytics_service.py` (log row per `QueryResult`, standard categories, aggregations, CSV export) and `pages/4_history.py`: reopenable questions, summary strip, and the five Inzichten sub-tabs (Klachten, Categorieën, Doelgroep, Uitkomsten, Producten).
+**Done when:** ten seeded questions produce the same counts as `demo/index.html`, the export contains no question text or personal data, and every category falls in the standard list.
+
+## Milestone 9: Polish
 Loading state with `st.spinner`, cancel and restart, keyboard flow (Enter sends), Dutch everywhere.
 **Done when:** both reviewer subagents come back PASS and the test suite is green.

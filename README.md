@@ -9,6 +9,7 @@ Open `demo/index.html` in any browser. That's it: double-click the file, or send
 - Type a question or click one of the examples. The assistant reads what it already knows from the sentence and asks only for what is missing.
 - Try the cases that matter: a child with sleep problems (blocked, doctor referral), a pregnant customer with a headache (paracetamol yes, ibuprofen no), "iets tegen een kater" (honest no-match), a returns question (no triage at all).
 - "Toon aan klant" opens the customer answer full screen.
+- **Geschiedenis** opens with ten questions from today and yesterday, and the **Inzichten** tabs show what a store can learn from them: complaints, categories, audience, outcomes and products, plus a CSV export. No personal data: buckets and categories only.
 
 **Live Claude mode (optional):** the gear icon lets the presenter switch from simulated answer text to text written by Claude, using their own Anthropic API key. The key stays in the tab's memory only. Search, safety rules and promotions still run locally; Claude only writes the two answers. Use this on your own laptop only; the real product keeps the key server-side.
 

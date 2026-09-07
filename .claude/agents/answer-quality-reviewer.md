@@ -10,6 +10,7 @@ tools: Read, Grep, Glob
 
 1. **`services/ai_service.py`**: the system prompt and dual-view composition
 2. **`services/safety_service.py`** (or wherever the blocking/escalation rules live)
+2b. **`services/analytics_service.py`**: the log row, standard categories and CSV export
 3. **`data/products.json`**: catalog (verify field names: `name`, `category`, `price_eur`, `age_restriction`, `min_age`, `pregnancy_safe`, `active_ingredient`, `symptoms`, `usage`, `disclaimer`)
 4. **`data/promotions.json`**: promotions with `type`, `start_date`, `end_date`
 5. **`data/policies.json`**: policies with `keywords`, `description`, `customer_text`
@@ -30,6 +31,8 @@ tools: Read, Grep, Glob
 
 6. **Hallucination guard.** Does the prompt restrict the model to the provided `recommended`, `alternatives` and `blocked` lists, and is there an explicit honest no-match path ("nothing suitable in the assortment, ask the pharmacist")? FAIL if the prompt allows open-ended recommendations or if the no-match path invents something similar.
 
+7. **Analytics log and privacy.** Does every result produce one log row with `category` from the standard list, `outcome`, `escalation` and an age *bucket*, and does the row (and the CSV export) exclude the raw question text, names and any free text a customer could be identified by? FAIL if the question text or a raw age is exported, or if a category outside the standard list is written. WARN if `assortment_gap` is not recorded on a no-match, since that is the purchasing signal the feature exists for.
+
 ## Output Format
 
 ```markdown
@@ -47,6 +50,7 @@ tools: Read, Grep, Glob
 | 4 | Promotion handling | | |
 | 5 | Dual-view separation | | |
 | 6 | Hallucination guard | | |
+| 7 | Analytics log and privacy | | |
 
 ### Top 3 Fixes
 

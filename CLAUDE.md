@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## What This Is
 
-**DrugStore Assistant AI**: a Streamlit prototype that helps store employees answer customer questions instantly by searching local product, promotion, and policy data. For symptom questions the assistant runs a triage protocol (who is it for, what complaints, since when, what has been tried) before recommending anything, applies hard safety rules in code, and produces two views: an employee view with reasoning, sources and internal context, and a clean customer-facing view. The Anthropic API key lives server-side in `.env`; it never ships to the browser.
+**DrugStore Assistant AI**: a Streamlit prototype that helps store employees answer customer questions instantly by searching local product, promotion, and policy data. For symptom questions the assistant runs a triage protocol (who is it for, what complaints, since when, what has been tried) before recommending anything, applies hard safety rules in code, and produces two views: an employee view with reasoning, sources and internal context, and a clean customer-facing view. Every answer is also logged as an anonymous, structured row so the store learns what customers ask, for whom, and what happened. The Anthropic API key lives server-side in `.env`; it never ships to the browser.
 
 ## Operating Assumptions (Non-Negotiable)
 
@@ -16,13 +16,13 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 Starter kit plus a working reference demo:
 
-- `demo/index.html` is a self-contained browser demo of the intended behaviour. Open it directly, no install, no account. Its engine (question classification, triage extraction, catalog search, safety rules, promotion dates, dual-view composition) is the reference for what the Streamlit app must do. Source is `demo/template.html`; `python demo/build_demo.py` inlines `data/*.json` into it.
+- `demo/index.html` is a self-contained browser demo of the intended behaviour. Open it directly, no install, no account. Its engine (question classification, triage extraction, catalog search, safety rules, promotion dates, dual-view composition, analytics) is the reference for what the Streamlit app must do. Source is `demo/template.html`; `python demo/build_demo.py` inlines `data/*.json` into it.
 - No Streamlit application code yet. Run `/scaffold` to generate it, porting the demo's logic into `services/`.
 
 ## Stack
 
 - **Frontend + Backend:** Streamlit (Python), UI and server logic in one process
-- **AI Provider:** Anthropic Claude API via the `anthropic` Python package. Default model `claude-opus-5`; `claude-haiku-4-5` if a cheaper model is wanted. The model writes answer text only; it never decides what is safe to sell.
+- **AI Provider:** Anthropic Claude API via the `anthropic` Python package. Default model `claude-opus-5`; `claude-haiku-4-5` if a cheaper model is wanted. The model writes answer text only; it never decides what is safe to sell. Put the system prompt and the catalog context first in the request with `cache_control` so repeated questions hit the prompt cache.
 - **Data Layer:** Local JSON files for products, promotions, and store policies (synthetic drugstore data)
 - **Session State:** Streamlit `st.session_state` for conversation history and triage flow tracking
 - **Navigation:** `st.navigation` with page files for the four screens
@@ -38,14 +38,15 @@ drugstore-assistant/
 ├── requirements.txt
 ├── app.py                      # Streamlit entrypoint with st.navigation
 ├── pages/
-│   ├── 1_ask.py                # Ask screen: free-text question, then only the missing triage fields
+│   ├── 1_ask.py                # Ask: free-text question, then only the missing triage fields
 │   ├── 2_employee_answer.py    # Employee view: answer, reasoning, safety checks, sources
 │   ├── 3_customer_view.py      # Customer-facing: clean, large type, presentation mode
-│   └── 4_history.py            # History: recent questions (reopenable), most asked
+│   └── 4_history.py            # History: reopenable questions + Inzichten (analytics sub-tabs)
 ├── services/
-│   ├── ai_service.py           # Anthropic API calls, prompt, dual-view composition
+│   ├── ai_service.py           # Anthropic API calls, prompt, dual-view composition, degraded mode
 │   ├── triage_service.py       # Classification, extraction from free text, gap questions
 │   ├── safety_service.py       # Age / pregnancy / tried-before blocks, escalation rules
+│   ├── analytics_service.py    # Structured log rows, standard categories, aggregations, CSV export
 │   ├── data_service.py         # Loads & searches product/promo/policy JSON
 │   └── session_service.py      # Session state helpers, conversation history
 ├── data/
@@ -59,6 +60,7 @@ drugstore-assistant/
 ├── tests/
 │   ├── test_triage_service.py
 │   ├── test_safety_service.py
+│   ├── test_analytics_service.py
 │   ├── test_ai_service.py
 │   └── test_data_service.py
 ├── docs/
@@ -88,6 +90,8 @@ python demo/build_demo.py       # rebuild the demo after editing data/*.json
 4. **Ask only the missing fields**, one at a time, in this order: who, child's age, complaints, duration, prior remedies. Quick-pick chips plus free text.
 5. `complete` is true when all four fields are filled. Only then search and recommend.
 
+**Targets:** a typical typed question needs at most two follow-up questions. Simulated answers appear within a second; live answers within five seconds, with a visible loading state.
+
 ## Safety Rules (Non-Negotiable, enforced in code)
 
 - **Age:** block a product when `min_age` is above the person's age, or `age_restriction` applies to a minor. Blocked means not recommended; the employee sees the reason.
@@ -96,6 +100,55 @@ python demo/build_demo.py       # rebuild the demo after editing data/*.json
 - **Escalate before selling:** child under 6 with fever, diarrhoea or vomiting = doctor today. Complaints "al langere tijd" = doctor. Prescription medication in use = pharmacist. Failed OTC attempt = pharmacist. Fever for a week or longer = doctor.
 - **Honesty:** if nothing in the data fits, say so. Never invent a product, price or promotion. A promotion never makes a product match a question it does not fit.
 - The model only writes text. Search, filtering, blocking and escalation are deterministic and unit-tested.
+
+## Degraded Mode
+
+If the Anthropic API is unavailable, slow, or refuses, the app composes both answers from templates (as the demo's simulated mode does) and labels them as such. The employee is never left without an answer because the model is down. Log the failure with `st.error()`; do not retry silently more than once.
+
+## Analytics ("Inzichten" on the History page)
+
+Purpose: the store learns what customers ask, for whom, and what happened, without storing personal data. Every `QueryResult` produces one structured **log row**:
+
+| Field | Values |
+|---|---|
+| `at` | ISO timestamp |
+| `store_id` | from config, optional |
+| `question_type` | `symptom`, `policy`, `promo`, `lookup`, `unknown` |
+| `category` | one **standard category** (below) |
+| `complaints` | symptom tags |
+| `audience` | `intended_for` + `age_bucket`; `pregnant` flag |
+| `duration`, `prior_remedies` | as in `TriageState` |
+| `outcome` | `recommended`, `blocked` (no safe product), `no_match` (not in assortment), `answered` (policy/promo/lookup), `unknown` |
+| `escalation` | `none`, `pharmacist`, `doctor`, `urgent` |
+| `recommended_id`, `blocked_ids`, `promo_id` | record ids |
+| `assortment_gap` | the complaint term when `outcome == no_match` (purchasing signal) |
+
+**Standard categories** are the product categories in `products.json` (Pijnstillers, Vitamines & Supplementen, Verkoudheid & Griep, Slaap, Stoppen met Roken, Huidverzorging, Eerste Hulp, Maag & Darm) plus four fixed ones for non-product questions: Beleid, Acties, Product opzoeken, Overig. A symptom question gets the category of the recommended product, else of the best candidate, else Overig.
+
+**Sub-tabs**, each a ranked list with counts and proportional bars:
+
+1. **Klachten**: complaint tags, most asked first.
+2. **Categorieën**: standard categories.
+3. **Doelgroep**: audience (self, partner, child by age bucket, other adult), pregnant count, and the top complaint per audience.
+4. **Uitkomsten**: recommended / blocked / not in assortment / referrals (pharmacist, doctor, urgent), plus the list of assortment gaps.
+5. **Producten**: most recommended, most blocked, and how often a promotion was shown.
+
+A summary strip above the tabs: total questions, referral rate, not-in-assortment rate, promotion rate. CSV export of the log rows.
+
+**Data policy (AVG):** the raw question text stays in the session only and is never exported. The log holds structured fields, never names, contact details or free text. Nothing identifies a person; age is a bucket. This is what `policies.json` `policy004` promises the customer.
+
+## Product Roadmap (proposed, not built)
+
+Ordered by value to a store; each one should get its own milestone and reviewer pass before it is built.
+
+1. **Stock and shelf location per product** (`stock`, `location` fields). "Waar ligt X" is the most common counter question and the data cannot answer it today.
+2. **Employee feedback on every answer**: one tap "klopt" / "klopt niet" with a reason. Creates the quality dataset needed to tune prompts and vocabulary.
+3. **Assortment gap report**: weekly list of `no_match` terms, so purchasing sees what customers asked for that the store does not carry.
+4. **Multi-store comparison** once `store_id` is set: same categories, different stores.
+5. **Seasonality view**: complaints per week (hooikoorts in spring, verkoudheid in autumn) once enough rows exist.
+6. **Interaction checks** (medication combinations) only with a pharmacist-approved table in `data/`; never guessed by the model.
+7. **English answers** for tourists, as a toggle on the customer view (stretch).
+8. **Voice input** (stretch, unchanged: browser audio, text stays the default).
 
 ## Architecture (Big Picture)
 
@@ -114,10 +167,11 @@ Employee types the question (free text)
                                                             ┌──────▼───────┐     ┌──────────────┐
                                                             │ AI Service   │────▶│ Anthropic API│ writes text only
                                                             └──────┬───────┘     └──────────────┘
+                                                                   │ QueryResult ──▶ Analytics Svc (log row)
                                               ┌────────────────────┼────────────────────┐
                                               ▼                    ▼                    ▼
                                         Employee View        Customer View          History
-                                   (reasoning, checks,   (short, large type,    (reopen, most asked)
+                                   (reasoning, checks,   (short, large type,    (reopen, Inzichten)
                                     blocked, sources)     presentation mode)
 ```
 
@@ -139,18 +193,20 @@ class TriageState:
 class QueryResult:
     question: str
     question_type: str             # symptom | policy | promo | lookup | unknown
+    category: str                  # one standard category
     triage: TriageState
     recommended: dict | None
     alternatives: list[dict]       # product + why
     blocked: list[dict]            # product + reason
     checks: list[dict]             # safety checks shown to the employee
     escalation: dict               # level: none | pharmacist | doctor | urgent, reason
+    outcome: str                   # recommended | blocked | no_match | answered | unknown
     matched_promotions: list[dict]
     applicable_policies: list[dict]
     employee_answer: str
     customer_answer: str
     sources: list[str]             # record ids: p001, promo002, policy003
-    timestamp: str
+    timestamp: str                 # ISO
 ```
 
 ## First-Time Setup Protocol
@@ -182,14 +238,16 @@ After the tour, create `.claude/.tour-completed`.
 - **Keep pages thin.** Pages call into `services/`; they don't contain business logic themselves
 - **Synthetic data stays realistic.** Dutch drugstore products (vitamins, pain relief, skincare) with realistic prices in EUR, and every product carries `min_age`, `pregnancy_safe`, `active_ingredient`, `symptoms`, `usage`
 - **Dutch UI.** The employees and the data are Dutch; keep all user-facing text in Dutch
+- **Green is the brand colour.** One green accent for navigation, primary actions and prices; blue for promotions; amber for "consult"; red for blocked and referrals. Semantic colours never double as the accent
 
 ## Scope Boundaries (Non-Negotiable)
 
-- **No cloud deployment.** No Streamlit Cloud, no AWS, no Docker
+- **No cloud deployment.** No Streamlit Cloud, no AWS, no Docker. One documented exception: a small relay that holds the API key so the demo can be shared by link, if the owner chooses to set one up. It is demo tooling, not part of the product.
 - **No real database.** JSON files only, no SQLite, no Postgres
-- **No authentication.** No login screen, no user roles
+- **No authentication.** No login screen, no user roles. `store_id` comes from config, not from a login
 - **No real voice input.** If we add speech, it's a stretch goal using browser audio; text input is the default
 - **No real product images.** Use placeholder URLs or emoji icons in the customer view
+- **No personal data.** The analytics log stores buckets and categories, never names, contact details or free text
 
 ## Known Gotchas
 
@@ -198,6 +256,7 @@ After the tour, create `.claude/.tour-completed`.
 - **JSON files must be valid.** A trailing comma will crash `json.load()`; validate after editing, then run `python demo/build_demo.py` so the demo stays in sync
 - **`st.navigation` requires Streamlit >= 1.36.** Pin the version in `requirements.txt`
 - **Promotions expire.** Active status is computed from `start_date` / `end_date` against today; never hardcode "valid until"
+- **Categories are a closed list.** Adding a product category means adding it to the standard categories too, or it falls under Overig in the analytics
 
 ## Helpers Available
 

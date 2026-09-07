@@ -19,7 +19,16 @@ The reference implementation of everything below is `demo/template.html`. When t
 8. **Compose** (`services/ai_service.py`): the model receives the structured outcome (recommended, alternatives, blocked with reasons, promotions, policies, escalation) and writes `employee_answer` and `customer_answer` in Dutch. It cannot add products. The demo's `LIVE_SYSTEM` prompt and JSON-schema output are the template.
 9. **Employee View**: escalation banner first, then answer, triage summary, safety checks (passed and blocked), recommendation with usage, promotion and disclaimer, alternatives, policies, sources as record ids.
 10. **Customer View**: product, price (promo price when `type == percent_off`), short answer, promotion, age note. Presentation mode fills the screen and hides all employee chrome.
-11. **History**: every `QueryResult`, reopenable; "most asked" computed from the session, not hardcoded.
+11. **Log** (`services/analytics_service.py`): every `QueryResult` becomes one structured row (category, complaints, audience bucket, outcome, escalation, record ids, assortment gap). Never the question text, never personal data.
+12. **History**: every `QueryResult`, reopenable, plus **Inzichten**: a summary strip (questions, referral rate, not-in-assortment rate, promotion rate) and five sub-tabs over the log rows: Klachten, Categorieën, Doelgroep, Uitkomsten, Producten. CSV export of the rows.
+
+## Categories
+
+One closed list, so counts stay comparable over time: the product categories in `products.json` plus Beleid, Acties, Product opzoeken and Overig. A symptom question takes the category of the recommended product, else of the best blocked candidate, else Overig. Adding a product category means adding it here too.
+
+## Analytics forms
+
+Counts are ranked lists with a proportional bar, one hue, count on the right and the share in the row's tooltip. Never a pie, never a second y-axis. Every bar row is also readable as text (label plus number), so the colour carries no information on its own.
 
 ## Data Layer
 

@@ -13,12 +13,14 @@
     --border: oklch(89% 0.012 75);
     --text: oklch(24% 0.02 55);
     --muted: oklch(50% 0.02 55);
-    --accent: oklch(48% 0.09 200);
-    --accent-dark: oklch(40% 0.09 200);
-    --accent-soft: oklch(94% 0.035 200);
+    --accent: oklch(44% 0.11 152);
+    --accent-dark: oklch(36% 0.11 152);
+    --accent-soft: oklch(94% 0.04 152);
     --on-accent: #fff;
-    --ok: oklch(46% 0.1 150);
-    --ok-soft: oklch(94% 0.045 150);
+    --ok: oklch(44% 0.11 152);
+    --ok-soft: oklch(94% 0.04 152);
+    --promo: oklch(46% 0.1 235);
+    --promo-soft: oklch(94% 0.035 235);
     --warn: oklch(50% 0.12 70);
     --warn-soft: oklch(95% 0.05 80);
     --danger: oklch(48% 0.13 25);
@@ -34,9 +36,10 @@
     :root:not([data-theme="light"]) {
       --bg: oklch(17% 0.01 60); --surface: oklch(22% 0.012 60); --surface-2: oklch(26% 0.012 60);
       --border: oklch(33% 0.012 60); --text: oklch(94% 0.01 75); --muted: oklch(70% 0.015 70);
-      --accent: oklch(74% 0.1 200); --accent-dark: oklch(82% 0.09 200); --accent-soft: oklch(30% 0.05 200);
-      --on-accent: oklch(15% 0.02 200);
-      --ok: oklch(76% 0.12 150); --ok-soft: oklch(28% 0.06 150);
+      --accent: oklch(76% 0.13 152); --accent-dark: oklch(84% 0.12 152); --accent-soft: oklch(30% 0.06 152);
+      --on-accent: oklch(15% 0.03 152);
+      --ok: oklch(76% 0.13 152); --ok-soft: oklch(28% 0.06 152);
+      --promo: oklch(76% 0.11 235); --promo-soft: oklch(30% 0.06 235);
       --warn: oklch(80% 0.13 75); --warn-soft: oklch(30% 0.06 75);
       --danger: oklch(76% 0.14 25); --danger-soft: oklch(30% 0.07 25);
       --shadow: 0 1px 2px oklch(0% 0 0 / 0.3), 0 4px 14px oklch(0% 0 0 / 0.35);
@@ -45,9 +48,10 @@
   :root[data-theme="dark"] {
     --bg: oklch(17% 0.01 60); --surface: oklch(22% 0.012 60); --surface-2: oklch(26% 0.012 60);
     --border: oklch(33% 0.012 60); --text: oklch(94% 0.01 75); --muted: oklch(70% 0.015 70);
-    --accent: oklch(74% 0.1 200); --accent-dark: oklch(82% 0.09 200); --accent-soft: oklch(30% 0.05 200);
-    --on-accent: oklch(15% 0.02 200);
-    --ok: oklch(76% 0.12 150); --ok-soft: oklch(28% 0.06 150);
+    --accent: oklch(76% 0.13 152); --accent-dark: oklch(84% 0.12 152); --accent-soft: oklch(30% 0.06 152);
+    --on-accent: oklch(15% 0.03 152);
+    --ok: oklch(76% 0.13 152); --ok-soft: oklch(28% 0.06 152);
+      --promo: oklch(76% 0.11 235); --promo-soft: oklch(30% 0.06 235);
     --warn: oklch(80% 0.13 75); --warn-soft: oklch(30% 0.06 75);
     --danger: oklch(76% 0.14 25); --danger-soft: oklch(30% 0.07 25);
     --shadow: 0 1px 2px oklch(0% 0 0 / 0.3), 0 4px 14px oklch(0% 0 0 / 0.35);
@@ -102,10 +106,10 @@
   .input { flex: 1; padding: 11px 14px; border-radius: 10px; border: 1.5px solid var(--border); font: inherit; background: var(--surface); color: var(--text); min-height: 44px; }
   .row { display: flex; gap: 10px; align-items: center; }
   .row.wrap { flex-wrap: wrap; }
-  .btn-primary { display: inline-flex; align-items: center; justify-content: center; gap: 8px; background: var(--accent); color: var(--on-accent); border: none; padding: 0 18px; min-height: 44px; border-radius: 10px; font-weight: 600; cursor: pointer; }
+  .btn-primary { display: inline-flex; align-items: center; justify-content: center; gap: 8px; background: var(--accent); color: var(--on-accent); border: none; padding: 0 18px; min-height: 44px; border-radius: 10px; font-weight: 600; cursor: pointer; white-space: nowrap; }
   .btn-primary:hover { background: var(--accent-dark); }
   .btn-primary:disabled { opacity: .45; cursor: not-allowed; }
-  .btn-outline { display: inline-flex; align-items: center; justify-content: center; gap: 8px; background: transparent; color: var(--accent); border: 1.5px solid var(--accent); padding: 0 16px; min-height: 44px; border-radius: 10px; font-weight: 600; cursor: pointer; }
+  .btn-outline { display: inline-flex; align-items: center; justify-content: center; gap: 8px; background: transparent; color: var(--accent); border: 1.5px solid var(--accent); padding: 0 16px; min-height: 44px; border-radius: 10px; font-weight: 600; cursor: pointer; white-space: nowrap; }
   .btn-outline:hover { background: var(--accent-soft); }
   .btn-ghost { background: none; border: none; color: var(--muted); font-weight: 500; cursor: pointer; padding: 8px 4px; min-height: 44px; display: inline-flex; align-items: center; gap: 6px; }
   .btn-ghost:hover { color: var(--text); }
@@ -149,7 +153,7 @@
   .usage { margin-top: 10px; font-size: 13.5px; color: var(--muted); }
   .note { display: flex; gap: 10px; align-items: flex-start; padding: 11px 13px; border-radius: 10px; font-size: 13px; line-height: 1.5; margin-top: 12px; }
   .note .icon { width: 16px; height: 16px; margin-top: 2px; }
-  .note.promo { background: var(--ok-soft); color: var(--ok); }
+  .note.promo { background: var(--promo-soft); color: var(--promo); }
   .note.caution { background: var(--danger-soft); color: var(--danger); }
   .note.consult { background: var(--warn-soft); color: var(--warn); }
   .alt { display: flex; justify-content: space-between; gap: 12px; padding: 10px 0; border-bottom: 1px solid var(--border); font-size: 13.5px; }
@@ -167,8 +171,21 @@
   .hist .q { font-weight: 500; }
   .hist .m { font-size: 12.5px; color: var(--muted); margin-top: 2px; }
   .hist .c { font-size: 12.5px; color: var(--muted); white-space: nowrap; }
-  .trend { display: inline-flex; align-items: center; gap: 8px; padding: 8px 14px; border-radius: 999px; background: var(--accent-soft); color: var(--accent-dark); font-weight: 500; font-size: 13px; }
-  .trend b { font-weight: 700; }
+  .stats { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px; margin-bottom: 16px; }
+  @media (max-width: 860px) { .stats { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+  .stat { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 14px 16px; }
+  .stat .n { font-family: var(--display); font-size: 26px; font-weight: 700; font-variant-numeric: tabular-nums; line-height: 1.1; }
+  .stat .l { font-size: 12px; color: var(--muted); margin-top: 4px; }
+  .tabs { display: flex; gap: 2px; border-bottom: 1px solid var(--border); margin-bottom: 14px; overflow-x: auto; }
+  .tab { background: none; border: none; padding: 10px 14px; min-height: 44px; color: var(--muted); font-weight: 500; cursor: pointer; border-bottom: 2px solid transparent; margin-bottom: -1px; white-space: nowrap; }
+  .tab:hover { color: var(--text); }
+  .tab.active { color: var(--accent-dark); border-bottom-color: var(--accent); font-weight: 600; }
+  .bar-row { display: grid; grid-template-columns: minmax(140px, 1fr) 2fr 44px; gap: 12px; align-items: center; padding: 6px 0; font-size: 13.5px; }
+  .bar-label { min-width: 0; }
+  .bar-sub { display: block; font-size: 12px; color: var(--muted); }
+  .bar-track { height: 8px; background: var(--surface-2); border-radius: 4px; overflow: hidden; }
+  .bar-fill { display: block; height: 100%; background: var(--accent); border-radius: 4px; }
+  .bar-n { text-align: right; font-variant-numeric: tabular-nums; font-weight: 500; }
 
   .customer-card { max-width: 560px; }
   .customer-card .answer { font-size: 17px; }
@@ -211,6 +228,7 @@
     <symbol id="i-expand" viewBox="0 0 24 24"><path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/></symbol>
     <symbol id="i-back" viewBox="0 0 24 24"><path d="M14 5l-6 7 6 7"/></symbol>
     <symbol id="i-stetho" viewBox="0 0 24 24"><path d="M6 3v6a4 4 0 008 0V3"/><path d="M10 13v3a5 5 0 0010 0v-1"/><circle cx="20" cy="13" r="2"/></symbol>
+    <symbol id="i-download" viewBox="0 0 24 24"><path d="M12 4v11M7 10l5 5 5-5M4 19h16"/></symbol>
   </defs>
 </svg>
 
@@ -298,9 +316,10 @@ const shortName = p => p.name.replace(/\s*\(.*?\)\s*$/, '').replace(/\b\d+([.,]\
 
 /* ---------- state ---------- */
 const state = {
-  view: 'ask', phase: 'input', mode: 'sim', apiKey: '',
+  view: 'ask', phase: 'input', mode: 'sim', apiKey: '', insightTab: 'klachten',
   question: '', ctx: null, gaps: [], result: null, history: [], liveNotice: '',
 };
+const STANDARD_CATEGORIES = [...new Set(PRODUCTS.map(p => p.category)), 'Beleid', 'Acties', 'Product opzoeken', 'Overig'];
 
 /* ---------- analysis: classify + extract ---------- */
 function matchSymptoms(t) {
@@ -347,25 +366,28 @@ function detectWho(t) {
   if (/\bbaby\b/.test(t)) bucket = '0-5'; else if (/\b(peuter|kleuter)\b/.test(t)) bucket = '0-5'; else if (/\btiener\b/.test(t)) bucket = '12-17';
   if (age !== null) { bucket = age < 6 ? '0-5' : age < 12 ? '6-11' : age < 18 ? '12-17' : 'volwassen'; if (who === null) who = age < 18 ? 'kind' : 'ander'; if (who === 'kind' && age >= 18) who = 'ander'; }
   if (who && who !== 'kind') bucket = bucket || 'volwassen';
-  return { who, bucket };
+  return { who, bucket, age };
 }
 function detectDuration(t) {
   if (/\b(sinds|vanaf)\s+(vandaag|vanochtend|vanmorgen|vannacht|vanmiddag|net|zojuist)\b/.test(t) || /\b(vandaag|vanochtend|vanmorgen|vannacht|net begonnen)\b/.test(t)) return 'vandaag';
   if (/\b(sinds|vanaf)?\s*(gisteren|gisteravond|eergisteren)\b/.test(t) || /\b(paar|enkele|twee|drie|2|3|4|5)\s+dag(en)?\b/.test(t) || /\bdag of (twee|drie|wat)\b/.test(t)) return 'een paar dagen';
   const dm = t.match(/\b(\d+)\s*dag(en)?\b/); if (dm) { const n = +dm[1]; return n <= 1 ? 'vandaag' : n <= 6 ? 'een paar dagen' : n <= 13 ? 'een week of langer' : 'al langere tijd'; }
   const wm = t.match(/\b(\d+|een|twee|drie|paar)\s*(week|weken)\b/); if (wm) { const n = { een: 1, twee: 2, drie: 3, paar: 2 }[wm[1]] ?? +wm[1]; return n >= 3 ? 'al langere tijd' : 'een week of langer'; }
-  if (/\b(maand|maanden|jaar|jaren|al lang|al heel lang|chronisch|altijd al|regelmatig|steeds weer|al tijden|al weken|maandenlang)\b/.test(t)) return 'al langere tijd';
+  if (/\b(maand|maanden|jaar|jaren|al lang|al langere tijd|langere tijd|al een tijd|al heel lang|chronisch|altijd al|regelmatig|steeds weer|al tijden|al weken|maandenlang)\b/.test(t)) return 'al langere tijd';
   if (/\b(een week|sinds een week|week)\b/.test(t)) return 'een week of langer';
   return null;
 }
 function detectPrior(t) {
   const failed = /\b(helpt niet|hielp niet|werkt niet|werkte niet|zonder effect|hielp niks|helpt niks|geen effect)\b/.test(t);
-  const tried = matchProducts(t).filter(id => PRODUCTS.find(p => p.id === id).active_ingredient);
-  const triedIngredient = tried.length ? PRODUCTS.find(p => p.id === tried[0]).active_ingredient : null;
-  if (/\b(op recept|van de (huis)?arts|van de dokter|voorgeschreven|antibiotica|medicijnen van)\b/.test(t)) return { prior: 'iets op recept', failed, triedIngredient };
-  if (/\b(nog )?(niets|niks|geen)\s+(geprobeerd|genomen|gebruikt|geslikt|gedaan)\b/.test(t) || /\bnog niets\b/.test(t) || /\bniets geprobeerd\b/.test(t)) return { prior: 'nog niets', failed: false, triedIngredient: null };
-  if (failed || /\b(al|eerder|net|gisteren)\s+([a-z]+\s+)?(geprobeerd|genomen|gebruikt|geslikt|gehad)\b/.test(t) || (triedIngredient && /\b(geprobeerd|genomen|gebruikt|geslikt|helpt|hielp)\b/.test(t))) return { prior: 'iets zonder recept', failed, triedIngredient };
-  return { prior: null, failed: false, triedIngredient: null };
+  const mentioned = matchProducts(t);
+  const withIngredient = mentioned.filter(id => PRODUCTS.find(p => p.id === id).active_ingredient);
+  const triedIngredient = withIngredient.length ? PRODUCTS.find(p => p.id === withIngredient[0]).active_ingredient : null;
+  const triedContext = /\b(geprobeerd|genomen|gebruikt|geslikt|gehad|gesmeerd|helpt|hielp|werkt|werkte)\b/.test(t);
+  const done = (prior, f) => ({ prior: prior, failed: f, triedIngredient: prior === 'nog niets' ? null : triedIngredient, triedProductIds: prior && prior !== 'nog niets' && triedContext ? mentioned : [] });
+  if (/\b(op recept|van de (huis)?arts|van de dokter|voorgeschreven|antibiotica|medicijnen van)\b/.test(t)) return done('iets op recept', failed);
+  if (/\b(nog )?(niets|niks|geen)\s+(geprobeerd|genomen|gebruikt|geslikt|gedaan)\b/.test(t) || /\bnog niets\b/.test(t) || /\bniets geprobeerd\b/.test(t)) return done('nog niets', false);
+  if (failed || /\b(al|eerder|net|gisteren)\s+([a-z]+\s+)?(geprobeerd|genomen|gebruikt|geslikt|gehad)\b/.test(t) || (triedIngredient && triedContext)) return done('iets zonder recept', failed);
+  return { prior: null, failed: false, triedIngredient: null, triedProductIds: [] };
 }
 function classify(t, tags, productIds) {
   const policyHit = POLICIES.filter(p => p.keywords.some(k => has(t, norm(k).trim())));
@@ -379,15 +401,16 @@ function classify(t, tags, productIds) {
 function analyze(question) {
   const t = norm(question);
   const tags = matchSymptoms(t);
-  const productIds = matchProducts(t);
-  const qtype = classify(t, tags, productIds);
   const who = detectWho(t);
   const pr = detectPrior(t);
+  // a product named as an already-tried remedy is not what the customer is asking for
+  const productIds = matchProducts(t).filter(id => !pr.triedProductIds.includes(id));
+  const qtype = classify(t, tags, productIds);
   const triage = {
-    intended_for: who.who, age_bucket: who.bucket,
+    intended_for: who.who, age_bucket: who.bucket, age: who.age,
     pregnant: /\b(zwanger|zwangerschap|borstvoeding)\b/.test(t),
     complaints: tags, complaint_raw: tags.length ? '' : rawComplaint(t),
-    duration: detectDuration(t), prior_remedies: pr.prior, prior_failed: pr.failed, tried_ingredient: pr.triedIngredient,
+    duration: detectDuration(t), prior_remedies: pr.prior, prior_failed: pr.failed, tried_ingredient: pr.triedIngredient, tried_product_ids: pr.triedProductIds,
     complete: false,
   };
   return { question, t, qtype, tags, productIds, categories: matchCategories(t), policyHits: POLICIES.filter(p => p.keywords.some(k => has(t, norm(k).trim()))), triage };
@@ -432,6 +455,7 @@ function applySafety(candidates, ctx) {
     if (tr.pregnant && p.pregnancy_safe === false) reasons.push('niet geschikt bij zwangerschap of borstvoeding');
     if (tr.pregnant && p.pregnancy_safe === null) flags.push('bij zwangerschap eerst overleggen met de apotheker');
     if (tr.tried_ingredient && p.active_ingredient === tr.tried_ingredient && tr.prior_failed) reasons.push(`${p.active_ingredient} is al geprobeerd zonder effect`);
+    else if (tr.prior_failed && (tr.tried_product_ids || []).includes(p.id)) reasons.push('is al geprobeerd zonder effect');
     if (reasons.length) blocked.push({ p, reason: reasons.join('; ') });
     else allowed.push({ p, flags });
   }
@@ -439,7 +463,7 @@ function applySafety(candidates, ctx) {
   allowed.sort((a, b) => a.flags.length - b.flags.length);
   checks.push({ ok: true, text: `Leeftijd: ${whoLabel(tr)}${tr.intended_for === 'kind' ? ', producten onder de minimumleeftijd uitgesloten' : ''}` });
   if (tr.pregnant) checks.push({ ok: true, text: 'Zwangerschap of borstvoeding vermeld: onveilige producten uitgesloten' });
-  else if (tr.intended_for !== 'kind' && allowed.some(a => a.p.pregnancy_safe !== true)) checks.push({ warn: true, text: 'Zwangerschap of borstvoeding: niet vermeld, vraag na voordat je dit meegeeft' });
+  else if (tr.intended_for !== 'kind' && !(tr.age && tr.age >= 50) && allowed.some(a => a.p.pregnancy_safe !== true)) checks.push({ warn: true, text: 'Zwangerschap of borstvoeding: niet vermeld, vraag na voordat je dit meegeeft' });
   if (tr.tried_ingredient) checks.push({ ok: true, text: `Eerder ${tr.tried_ingredient} geprobeerd${tr.prior_failed ? ' zonder effect: ander werkzaam bestanddeel gezocht' : ''}` });
   return { allowed, blocked, checks };
 }
@@ -464,7 +488,26 @@ function priceLine(p) {
   if (promo && promo.type === 'percent_off') return { now: p.price_eur * (1 - promo.discount_percent / 100), was: p.price_eur, promo };
   return { now: p.price_eur, was: null, promo };
 }
+function categoryOf(r) {
+  if (r.qtype === 'policy') return 'Beleid';
+  if (r.qtype === 'promo') return 'Acties';
+  if (r.qtype === 'lookup') return 'Product opzoeken';
+  if (r.recommended) return r.recommended.category;
+  if (r.blocked && r.blocked.length) return r.blocked[0].p.category;
+  return 'Overig';
+}
+function outcomeOf(r) {
+  if (r.qtype === 'symptom') return r.recommended ? 'recommended' : r.noMatch ? 'no_match' : 'blocked';
+  if (r.qtype === 'unknown') return 'unknown';
+  if (r.qtype === 'lookup' && !r.recommended) return 'no_match';
+  return 'answered';
+}
 function resolve(ctx) {
+  const r = resolveCore(ctx);
+  r.category = categoryOf(r); r.outcome = outcomeOf(r); r.at = new Date().toISOString();
+  return r;
+}
+function resolveCore(ctx) {
   const tr = ctx.triage;
   const base = { question: ctx.question, qtype: ctx.qtype, triage: tr, recommended: null, alternatives: [], blocked: [], checks: [], promos: [], policies: [], escalation: { level: 'none', reason: '' }, sources: [], timestamp: timeLabel(), mode: state.mode };
   if (ctx.qtype === 'policy') {
@@ -738,13 +781,86 @@ function renderCustomer() {
   if (!r) return head + `<div class="card"><h2>Nog geen antwoord</h2><p class="muted" style="margin-top:6px">Stel eerst een vraag.</p><div class="row" style="margin-top:16px"><button class="btn-primary" data-action="new">Nieuwe vraag</button></div></div>`;
   return head + `<div class="card lift customer-card">${customerBlock(r, false)}</div>`;
 }
+/* ---------- analytics: structured log rows, no personal data ---------- */
+function audienceLabel(tr) {
+  if (!tr.intended_for) return 'Onbekend';
+  if (tr.intended_for === 'kind') return 'Kind ' + (tr.age_bucket ? tr.age_bucket + ' jaar' : '(leeftijd onbekend)');
+  return { mezelf: 'Klant zelf', partner: 'Partner', ander: 'Andere volwassene' }[tr.intended_for];
+}
+function logRow(r) {
+  return {
+    at: r.at, question_type: r.qtype, category: r.category,
+    complaints: r.triage.complaints.join('|'), audience: audienceLabel(r.triage), pregnant: r.triage.pregnant ? 1 : 0,
+    duration: r.triage.duration || '', prior_remedies: r.triage.prior_remedies || '',
+    outcome: r.outcome, escalation: r.escalation ? r.escalation.level : 'none',
+    recommended_id: r.recommended ? r.recommended.id : '', blocked_ids: (r.blocked || []).map(b => b.p.id).join('|'),
+    promo_id: r.promos && r.promos.length ? r.promos[0].id : '', assortment_gap: r.outcome === 'no_match' && r.qtype === 'symptom' ? complaintLabel(r.triage) : '',
+  };
+}
+function count(list, keyFn) {
+  const m = new Map();
+  for (const x of list) { const k = keyFn(x); if (k == null || k === '') continue; for (const kk of (Array.isArray(k) ? k : [k])) m.set(kk, (m.get(kk) || 0) + 1); }
+  return [...m.entries()].sort((a, b) => b[1] - a[1] || String(a[0]).localeCompare(String(b[0])));
+}
+function bars(entries, total, opts = {}) {
+  if (!entries.length) return '<p class="muted small">Nog geen gegevens</p>';
+  const max = entries[0][1];
+  return entries.map(([k, n]) => `<div class="bar-row" title="${n} van ${total} (${total ? Math.round(n / total * 100) : 0}%)"><span class="bar-label">${esc(cap(String(k)))}${opts.sub && opts.sub[k] ? `<span class="bar-sub">${esc(opts.sub[k])}</span>` : ''}</span><span class="bar-track"><span class="bar-fill" style="width:${Math.max(3, n / max * 100)}%"></span></span><span class="bar-n">${n}</span></div>`).join('');
+}
+function exportCsv() {
+  const cols = ['at', 'question_type', 'category', 'complaints', 'audience', 'pregnant', 'duration', 'prior_remedies', 'outcome', 'escalation', 'recommended_id', 'blocked_ids', 'promo_id', 'assortment_gap'];
+  const q = v => '"' + String(v ?? '').replace(/"/g, '""') + '"';
+  const lines = [cols.join(',')].concat([...state.history].reverse().map(r => { const row = logRow(r); return cols.map(c => q(row[c])).join(','); }));
+  const blob = new Blob(['﻿' + lines.join('\n')], { type: 'text/csv;charset=utf-8' });
+  const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = 'drugstore-inzichten.csv'; document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(() => URL.revokeObjectURL(a.href), 1000);
+}
+function renderInsights() {
+  const H = state.history, N = H.length, tab = state.insightTab;
+  const sym = H.filter(r => r.qtype === 'symptom');
+  if (tab === 'klachten') return bars(count(H, r => r.triage.complaints.length ? r.triage.complaints : (r.qtype === 'symptom' && r.triage.complaint_raw ? r.triage.complaint_raw : null)), N);
+  if (tab === 'categorieen') return bars(count(H, r => r.category), N) + `<p class="muted small" style="margin-top:12px">Vaste categorieën: ${STANDARD_CATEGORIES.join(', ')}.</p>`;
+  if (tab === 'doelgroep') {
+    const byAud = count(sym, r => audienceLabel(r.triage));
+    const sub = {};
+    for (const [aud] of byAud) { const top = count(sym.filter(r => audienceLabel(r.triage) === aud), r => r.triage.complaints.length ? r.triage.complaints : (r.triage.complaint_raw || null))[0]; sub[aud] = top ? 'meest gevraagd: ' + top[0] : ''; }
+    return bars(byAud, sym.length, { sub }) + `<p class="muted small" style="margin-top:12px">Zwangerschap of borstvoeding vermeld bij ${sym.filter(r => r.triage.pregnant).length} van ${sym.length} symptoomvragen. Leeftijd wordt alleen als groep bewaard.</p>`;
+  }
+  if (tab === 'uitkomsten') {
+    const OUT = { recommended: 'Product aanbevolen', blocked: 'Geen veilig product', no_match: 'Niet in assortiment', answered: 'Beantwoord uit beleid, acties of assortiment', unknown: 'Geen informatie beschikbaar' };
+    const ESC = { pharmacist: 'Apotheker', doctor: 'Huisarts', urgent: 'Huisarts, vandaag nog' };
+    return bars(count(H, r => OUT[r.outcome] || r.outcome), N)
+      + `<div class="label" style="margin:18px 0 8px">Doorverwijzingen</div>` + bars(count(H.filter(r => r.escalation && r.escalation.level !== 'none'), r => ESC[r.escalation.level]), N)
+      + `<div class="label" style="margin:18px 0 8px">Assortimentshiaten: gevraagd, niet in assortiment</div>` + bars(count(H.filter(r => r.outcome === 'no_match' && r.qtype === 'symptom'), r => complaintLabel(r.triage)), N);
+  }
+  if (tab === 'producten') {
+    const recs = sym.filter(r => r.recommended);
+    return `<div class="label" style="margin-bottom:8px">Meest aanbevolen</div>` + bars(count(recs, r => r.recommended.name), N)
+      + `<div class="label" style="margin:18px 0 8px">Meest geblokkeerd door veiligheidsregels</div>` + bars(count(H, r => (r.blocked || []).map(b => b.p.name)), N)
+      + `<p class="muted small" style="margin-top:12px">Actie getoond bij ${recs.filter(r => r.promos.length).length} van ${recs.length} aanbevelingen.</p>`;
+  }
+  return '';
+}
 function renderHistory() {
-  const counts = {};
-  for (const r of state.history) { const k = r.qtype === 'symptom' ? (r.recommended ? r.recommended.category : cap(complaintLabel(r.triage))) : { policy: 'Beleid', promo: 'Aanbiedingen', lookup: 'Product opzoeken', unknown: 'Onbekend' }[r.qtype]; counts[k] = (counts[k] || 0) + 1; }
-  const trending = Object.entries(counts).sort((a, b) => b[1] - a[1]).slice(0, 4);
-  return `<div class="view-head"><div><h1>Geschiedenis</h1><p class="muted">Vragen uit deze sessie. Klik om het antwoord opnieuw te openen.</p></div></div>
-    <div class="card">${state.history.length ? state.history.map((r, i) => `<button class="hist" data-hist="${i}"><div><div class="q">${esc(r.question)}</div><div class="m">${esc(r.timestamp)} · ${r.mode === 'live' ? 'Claude' : 'gesimuleerd'}${r.escalation && r.escalation.level !== 'none' ? ' · doorverwijzing' : ''}</div></div><div class="c">${esc(r.qtype === 'symptom' ? (r.recommended ? r.recommended.name : 'geen product') : { policy: 'beleid', promo: 'actie', lookup: 'product', unknown: 'onbekend' }[r.qtype])}</div></button>`).join('') : '<p class="muted">Nog geen vragen gesteld.</p>'}</div>
-    <div class="card"><div class="label" style="margin-bottom:10px">Meest gevraagd in deze sessie</div><div class="chips">${trending.length ? trending.map(([k, n]) => `<span class="trend"><b>${n}</b> ${esc(k)}</span>`).join('') : '<span class="muted small">Nog geen gegevens</span>'}</div></div>`;
+  const H = state.history, N = H.length;
+  const pct = n => N ? Math.round(n / N * 100) + '%' : '0%';
+  const referred = H.filter(r => r.escalation && r.escalation.level !== 'none').length;
+  const gaps = H.filter(r => r.outcome === 'no_match').length;
+  const withPromo = H.filter(r => r.promos && r.promos.length).length;
+  const tabs = [['klachten', 'Klachten'], ['categorieen', 'Categorieën'], ['doelgroep', 'Doelgroep'], ['uitkomsten', 'Uitkomsten'], ['producten', 'Producten']];
+  const outcomeShort = r => r.qtype === 'symptom' ? (r.recommended ? shortName(r.recommended) : r.outcome === 'no_match' ? 'niet in assortiment' : 'geen veilig product') : { policy: 'beleid', promo: 'actie', lookup: r.recommended ? shortName(r.recommended) : 'niet gevonden', unknown: 'onbekend' }[r.qtype];
+  return `<div class="view-head"><div><h1>Geschiedenis</h1><p class="muted">Vragen uit deze sessie en wat de winkel eruit kan leren. Geen persoonsgegevens: alleen categorieën, uitkomsten en leeftijdsgroepen.</p></div><button class="btn-outline" data-action="csv">${icon('i-download', 'icon sm')}Exporteer CSV</button></div>
+    <div class="stats">
+      <div class="stat"><div class="n">${N}</div><div class="l">Vragen</div></div>
+      <div class="stat"><div class="n">${pct(referred)}</div><div class="l">Doorverwezen</div></div>
+      <div class="stat"><div class="n">${pct(gaps)}</div><div class="l">Niet in assortiment</div></div>
+      <div class="stat"><div class="n">${pct(withPromo)}</div><div class="l">Met actie</div></div>
+    </div>
+    <div class="card"><div class="label" style="margin-bottom:6px">Inzichten</div>
+      <div class="tabs" role="tablist">${tabs.map(([id, l]) => `<button class="tab ${state.insightTab === id ? 'active' : ''}" role="tab" aria-selected="${state.insightTab === id}" data-tab="${id}">${l}</button>`).join('')}</div>
+      ${renderInsights()}
+    </div>
+    <div class="card"><div class="label" style="margin-bottom:6px">Vragen, klik om opnieuw te openen</div>${N ? H.map((r, i) => `<button class="hist" data-hist="${i}"><div><div class="q">${esc(r.question)}</div><div class="m">${esc(r.timestamp)} · ${esc(r.category)}${r.escalation && r.escalation.level !== 'none' ? ' · doorverwezen' : ''}${r.mode === 'live' ? ' · Claude' : ''}</div></div><div class="c">${esc(outcomeShort(r))}</div></button>`).join('') : '<p class="muted">Nog geen vragen gesteld.</p>'}</div>`;
 }
 function renderSettings() {
   const pop = document.getElementById('pop');
@@ -771,17 +887,19 @@ function openPresent() {
 
 /* ---------- events ---------- */
 document.addEventListener('click', e => {
-  const b = e.target.closest('[data-view],[data-action],[data-example],[data-gap],[data-hist]');
+  const b = e.target.closest('[data-view],[data-action],[data-example],[data-gap],[data-hist],[data-tab]');
   if (!b) { if (!e.target.closest('#pop') && !e.target.closest('#settingsBtn')) { const pop = document.getElementById('pop'); if (!pop.hidden) { pop.hidden = true; } } return; }
   if (b.dataset.view) { state.view = b.dataset.view; render(); return; }
   if (b.dataset.example) { state.view = 'ask'; state.phase = 'input'; state.question = b.dataset.example; render(); startQuestion(b.dataset.example); return; }
   if (b.dataset.hist !== undefined) { state.result = state.history[+b.dataset.hist]; state.view = 'employee'; render(); return; }
+  if (b.dataset.tab) { state.insightTab = b.dataset.tab; render(); return; }
   if (b.dataset.gap && b.dataset.value !== undefined) { answerGap(b.dataset.gap, b.dataset.value); return; }
   const a = b.dataset.action;
   if (a === 'send') { const q = document.getElementById('q').value.trim(); if (q) startQuestion(q); }
   if (a === 'free') { const v = document.getElementById('free').value.trim(); if (v) answerGap(b.dataset.gap, v); }
   if (a === 'new') reset();
   if (a === 'present') openPresent();
+  if (a === 'csv') exportCsv();
   if (a === 'closePresent') document.getElementById('present').classList.remove('on');
   if (a === 'closeSettings') document.getElementById('pop').hidden = true;
 });
@@ -799,14 +917,25 @@ document.addEventListener('keydown', e => {
   if (e.key === 'Enter' && e.target.id === 'free') { e.preventDefault(); const v = e.target.value.trim(); if (v) answerGap(state.gaps[0], v); }
 });
 
-/* ---------- seed: three realistic earlier questions so the tool opens in a working state ---------- */
-function seed(question, fill, stamp) {
+/* ---------- seed: ten realistic earlier questions so the tool opens in a working state ---------- */
+function seed(question, fill, dayOffset, hhmm) {
   const ctx = analyze(question); Object.assign(ctx.triage, fill || {}); ctx.triage.complete = true;
-  const r = resolve(ctx); Object.assign(r, composeSim(r)); r.mode = 'sim'; r.timestamp = stamp; state.history.unshift(r);
+  const r = resolve(ctx); Object.assign(r, composeSim(r)); r.mode = 'sim';
+  const d = new Date(TODAY); d.setDate(d.getDate() - dayOffset); const [h, m] = hhmm.split(':'); d.setHours(+h, +m, 0, 0);
+  r.at = d.toISOString();
+  r.timestamp = (dayOffset === 0 ? 'Vandaag' : dayOffset === 1 ? 'Gisteren' : fmtDate(d.toISOString().slice(0, 10))) + ' ' + hhmm;
+  state.history.unshift(r);
 }
-seed('Kan ik een geopende dagcrème retourneren?', {}, 'Vandaag 08:41');
-seed('Ik ben zwanger en heb sinds vanochtend hoofdpijn, nog niets genomen', {}, 'Vandaag 09:12');
-seed('Mijn zoon van 8 heeft sinds gisteren keelpijn, we hebben nog niets geprobeerd', {}, 'Vandaag 09:35');
+seed('Mijn moeder van 72 heeft al langere tijd last van gewrichtspijn, ze gebruikt medicijnen van de huisarts', {}, 1, '09:02');
+seed('Hebben jullie vitamine D?', {}, 1, '10:15');
+seed('Mijn zoon van 15 heeft puistjes, sinds een paar maanden, hij heeft nog niets geprobeerd', {}, 1, '11:40');
+seed('Is er korting op aftersun?', {}, 1, '13:05');
+seed('Mijn peuter heeft koorts sinds vannacht, nog niets gegeven', {}, 1, '15:30');
+seed('Heb je iets tegen wratten?', {}, 1, '16:48');
+seed('Kan ik een geopende dagcrème retourneren?', {}, 0, '08:41');
+seed('Ik ben zwanger en heb sinds vanochtend hoofdpijn, nog niets genomen', {}, 0, '09:12');
+seed('Mijn zoon van 8 heeft sinds gisteren keelpijn, we hebben nog niets geprobeerd', {}, 0, '09:35');
+seed('Mijn partner wil stoppen met roken, hij heeft eerder pleisters geprobeerd', { duration: 'een week of langer' }, 0, '10:20');
 state.result = state.history[0];
 render();
 </script>
