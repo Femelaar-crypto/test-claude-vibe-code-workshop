@@ -1,31 +1,35 @@
 # Build Guide
 
-Work through these in order. Run `/next` at any point to see where you are.
+Work through these in order. Run `/next` at any point to see where you are. Before each milestone, run the same case in `demo/index.html`: the app must behave the same.
 
-## Milestone 1 — Scaffold
+## Milestone 1: Scaffold
 Run `/scaffold` to generate `requirements.txt`, `app.py`, `pages/`, `services/`, `tests/`.
 **Done when:** `streamlit run app.py` launches and navigates between four empty pages.
 
-## Milestone 2 — Data layer
-Implement `services/data_service.py`: load the three JSON files with `st.cache_data`, expose search functions.
-**Done when:** `tests/test_data_service.py` passes and searching returns real products/promotions/policies.
+## Milestone 2: Data layer
+Implement `services/data_service.py`: load the three JSON files with `st.cache_data`, expose `search_products(tags, text)`, `active_promotions(today)`, `match_policies(text)`.
+**Done when:** `tests/test_data_service.py` passes; a promotion never makes a non-matching product appear.
 
-## Milestone 3 — Triage flow
-Implement the four-question triage state machine in `services/ai_service.py` / `pages/1_ask.py`, backed by `TriageState` in `st.session_state`.
-**Done when:** asking a question walks through all four triage questions in order, one at a time, before accepting the actual question. Run `triage-flow-reviewer`.
+## Milestone 3: Classification and extraction
+Port `analyze`, `matchSymptoms`, `detectWho`, `detectDuration`, `detectPrior` and `computeGaps` from `demo/template.html` into `services/triage_service.py`.
+**Done when:** "Mijn dochter van 8 heeft sinds gisteren keelpijn, nog niets geprobeerd" produces a complete `TriageState` with zero gap questions, and "Kan ik dit retourneren?" is classified `policy`. Run `triage-flow-reviewer`.
 
-## Milestone 4 — AI service & prompt
-Implement the system prompt and Anthropic API call in `services/ai_service.py`: use the triage answers and matched data, produce `employee_answer` and `customer_answer`, prioritize promotions, attach compliance disclaimers, refuse to invent products outside the dataset.
-**Done when:** a real question returns both views with correct sources. Run `answer-quality-reviewer`.
+## Milestone 4: Ask page with gap questions
+Build `pages/1_ask.py`: free-text input, then only the missing fields one at a time, backed by `st.session_state`. Include the no-match short-circuit.
+**Done when:** "Mijn vrouw heeft keelpijn" asks exactly two questions (since when, tried anything) and "iets tegen een kater" asks none.
 
-## Milestone 5 — Employee & customer views
-Build `pages/2_employee_answer.py` (sources, context) and `pages/3_customer_view.py` (clean, no jargon, no internal context).
-**Done when:** the two views clearly diverge — a customer never sees internal notes or source citations.
+## Milestone 5: Safety rules
+Port `applySafety` and `decideEscalation` into `services/safety_service.py` with unit tests for every rule in CLAUDE.md.
+**Done when:** a child of 9 with sleep problems gets no product and a doctor referral; a pregnant customer with a headache gets paracetamol and never ibuprofen. Run `answer-quality-reviewer`.
 
-## Milestone 6 — History
-Build `pages/4_history.py`: recent questions and trending topics from session history.
-**Done when:** asking multiple questions in a session populates a visible history.
+## Milestone 6: AI composition
+Implement `services/ai_service.py`: send the structured outcome to Claude (see the demo's `LIVE_SYSTEM` and JSON-schema output), receive `employee_answer` and `customer_answer`. Keep a templated fallback for when the API fails.
+**Done when:** both views come back in Dutch, the customer view contains no record ids, and a blocked product is never recommended. Run `answer-quality-reviewer` again.
 
-## Milestone 7 — Tests & polish
-Fill out `tests/test_ai_service.py` and `tests/test_data_service.py`: full triage progression, at least one edge case (vague answer, restart, off-topic question), data search correctness.
+## Milestone 7: Employee, customer and history pages
+Build `pages/2_employee_answer.py` (escalation banner, checks, blocked, alternatives, sources), `pages/3_customer_view.py` (large type, presentation mode) and `pages/4_history.py` (reopen, most asked from the session).
+**Done when:** the employee can turn the screen to the customer without any internal information visible.
+
+## Milestone 8: Polish
+Loading state with `st.spinner`, cancel and restart, keyboard flow (Enter sends), Dutch everywhere.
 **Done when:** both reviewer subagents come back PASS and the test suite is green.

@@ -1,6 +1,6 @@
 ---
 name: answer-quality-reviewer
-description: Audits the AI system prompt and answer-generation logic for data accuracy, compliance disclaimers, and promotion prioritization. Use when the user has written or modified the prompt or answer logic in services/ai_service.py and wants a focused review before shipping.
+description: Audits answer composition, the safety rules and the system prompt for data accuracy, hard compliance blocks, promotion handling and the hallucination guard. Use when the user has written or modified services/ai_service.py, services/safety_service.py or the prompt, and wants a focused review before shipping.
 tools: Read, Grep, Glob
 ---
 
@@ -8,25 +8,27 @@ tools: Read, Grep, Glob
 
 ## Inputs to Read
 
-1. **`services/ai_service.py`** — the system prompt and answer-generation logic
-2. **`data/products.json`** — product catalog (to verify the prompt references real fields)
-3. **`data/promotions.json`** — active promotions (to verify promo prioritization instructions)
-4. **`data/policies.json`** — store policies (to verify compliance/disclaimer instructions)
-5. **`CLAUDE.md`** — the "Working Style" and "Scope Boundaries" sections for project constraints
+1. **`services/ai_service.py`**: the system prompt and dual-view composition
+2. **`services/safety_service.py`** (or wherever the blocking/escalation rules live)
+3. **`data/products.json`**: catalog (verify field names: `name`, `category`, `price_eur`, `age_restriction`, `min_age`, `pregnancy_safe`, `active_ingredient`, `symptoms`, `usage`, `disclaimer`)
+4. **`data/promotions.json`**: promotions with `type`, `start_date`, `end_date`
+5. **`data/policies.json`**: policies with `keywords`, `description`, `customer_text`
+6. **`CLAUDE.md`**: the "Safety Rules" and "Scope Boundaries" sections
+7. **`demo/template.html`**: the reference implementation (`applySafety`, `decideEscalation`, `composeSim`, `LIVE_SYSTEM`)
 
 ## Review Axes
 
-1. **Data field alignment** — Does the system prompt reference product fields (name, category, price_eur, age_restriction, disclaimer) that actually exist in `products.json`? FAIL if the prompt references fields that don't exist or misses critical fields.
+1. **Data field alignment.** Does the code and prompt use fields that exist in the JSON (see list above) and nothing else? FAIL if it references fields that don't exist or ignores `min_age`, `pregnancy_safe` or `active_ingredient`.
 
-2. **Compliance disclaimers** — Does the prompt instruct the AI to include age-restriction warnings and "consult a doctor/pharmacist" disclaimers when relevant? FAIL if age-restricted products could be recommended without any disclaimer.
+2. **Hard safety blocks, not disclaimers.** Is a product with `min_age` above the person's age, or an `age_restriction` for a minor, or `pregnancy_safe == false` for a pregnant customer, excluded from the recommendation entirely, with the reason shown to the employee? FAIL if such a product can still be recommended with only a warning attached. FAIL if the model, rather than code, decides what is blocked.
 
-3. **Promotion prioritization** — Does the prompt tell the AI to surface promoted products first or highlight them when they match the query? WARN if promotions are mentioned but not prioritized; FAIL if promotions are ignored entirely.
+3. **Escalation.** Are the rules in CLAUDE.md implemented (child under 6 with fever/diarrhoea/vomiting = doctor today; "al langere tijd" = doctor; prescription medication = pharmacist; failed OTC attempt = pharmacist), and does the referral come first in both answers? WARN if implemented but buried; FAIL if missing.
 
-4. **Dual-view separation** — Does the prompt ask for two distinct outputs (employee_answer with sources/context, customer_answer clean and jargon-free)? FAIL if only one view is generated or if internal context leaks into the customer answer.
+4. **Promotion handling.** Are promotions filtered by today's date, attached to the matched product, mentioned in both views with the end date, and never used to make a product match a question it doesn't fit? WARN if mentioned but not prioritised among equal matches; FAIL if expired promotions show or if a promotion alone produces a match.
 
-5. **Triage integration** — Does the prompt use all four triage answers (intended_for, complaints, duration, prior_remedies) to inform the recommendation? WARN if some triage fields are ignored; FAIL if triage data isn't passed to the API at all.
+5. **Dual-view separation.** Does the employee answer carry reasoning, blocked products with reasons, alternatives, record ids and disclaimers verbatim, while the customer answer has no ids, no internal reasoning and no words like "bron" or "triage"? FAIL if internal context leaks into the customer answer or only one view is produced.
 
-6. **Hallucination guard** — Does the prompt instruct the AI to only recommend products from the provided data and to say "I don't have information on that" when no match exists? FAIL if the prompt allows open-ended recommendations beyond the dataset.
+6. **Hallucination guard.** Does the prompt restrict the model to the provided `recommended`, `alternatives` and `blocked` lists, and is there an explicit honest no-match path ("nothing suitable in the assortment, ask the pharmacist")? FAIL if the prompt allows open-ended recommendations or if the no-match path invents something similar.
 
 ## Output Format
 
@@ -40,10 +42,10 @@ tools: Read, Grep, Glob
 | # | Axis | Verdict | Evidence |
 |---|------|---------|----------|
 | 1 | Data field alignment | | |
-| 2 | Compliance disclaimers | | |
-| 3 | Promotion prioritization | | |
-| 4 | Dual-view separation | | |
-| 5 | Triage integration | | |
+| 2 | Hard safety blocks | | |
+| 3 | Escalation | | |
+| 4 | Promotion handling | | |
+| 5 | Dual-view separation | | |
 | 6 | Hallucination guard | | |
 
 ### Top 3 Fixes

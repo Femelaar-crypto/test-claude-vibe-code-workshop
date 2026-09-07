@@ -2,6 +2,7 @@
   {
     "id": "promo001",
     "product_ids": ["p004"],
+    "type": "percent_off",
     "title": "20% korting op Vitamine C Bruistabletten",
     "description": "Versterk de weerstand voor het najaar begint.",
     "discount_percent": 20,
@@ -11,6 +12,7 @@
   {
     "id": "promo002",
     "product_ids": ["p011", "p012"],
+    "type": "second_half_price",
     "title": "2e artikel halve prijs op huidverzorging",
     "description": "Geldig op aftersun en dagcrème, zolang de voorraad strekt.",
     "discount_percent": 50,
@@ -20,6 +22,7 @@
   {
     "id": "promo003",
     "product_ids": ["p003", "p005"],
+    "type": "percent_off",
     "title": "15% korting op vitamines voor het najaar",
     "description": "Bereid het immuunsysteem voor op de herfst.",
     "discount_percent": 15,

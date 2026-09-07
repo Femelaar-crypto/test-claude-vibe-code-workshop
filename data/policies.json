@@ -3,24 +3,32 @@
     "id": "policy001",
     "category": "age_restriction",
     "title": "Leeftijdsgrens verkoop",
-    "description": "Producten met een leeftijdsgrens (age_restriction) mogen niet verkocht worden aan klanten die daar niet aan voldoen. Vraag bij twijfel naar legitimatie."
+    "keywords": ["leeftijd", "legitimatie", "minderjarig", "18 jaar", "id kaart"],
+    "description": "Producten met een leeftijdsgrens (age_restriction) mogen niet verkocht worden aan klanten die daar niet aan voldoen. Vraag bij twijfel naar legitimatie.",
+    "customer_text": "Voor sommige producten geldt een minimumleeftijd. We kunnen dan om een legitimatiebewijs vragen."
   },
   {
     "id": "policy002",
     "category": "medical_disclaimer",
     "title": "Medisch advies",
-    "description": "Het personeel geeft geen medische diagnoses. Verwijs bij twijfel, aanhoudende klachten, zwangerschap, of interactie met andere medicatie altijd door naar een arts of apotheker."
+    "keywords": ["arts", "apotheker", "dokter", "huisarts", "medisch advies", "diagnose"],
+    "description": "Het personeel geeft geen medische diagnoses. Verwijs bij twijfel, aanhoudende klachten, zwangerschap, of interactie met andere medicatie altijd door naar een arts of apotheker.",
+    "customer_text": "Wij geven geen medische diagnoses. Bij twijfel, aanhoudende klachten of medicijngebruik kun je het beste een arts of apotheker raadplegen."
   },
   {
     "id": "policy003",
     "category": "returns",
     "title": "Retourbeleid",
-    "description": "Geopende geneesmiddelen en verzorgingsproducten kunnen om hygiënische redenen niet worden geretourneerd, tenzij het product defect is."
+    "keywords": ["retour", "retourneren", "terugbrengen", "ruilen", "geld terug", "terugsturen", "garantie"],
+    "description": "Geopende geneesmiddelen en verzorgingsproducten kunnen om hygiënische redenen niet worden geretourneerd, tenzij het product defect is.",
+    "customer_text": "Ongeopende producten kun je met de bon retourneren. Geopende geneesmiddelen en verzorgingsproducten nemen we om hygiënische redenen alleen terug als ze defect zijn."
   },
   {
     "id": "policy004",
     "category": "data_privacy",
     "title": "Klantgegevens",
-    "description": "Er wordt geen persoonlijke of medische informatie van klanten opgeslagen buiten de huidige sessie."
+    "keywords": ["privacy", "gegevens", "opslaan", "persoonlijke informatie", "avg"],
+    "description": "Er wordt geen persoonlijke of medische informatie van klanten opgeslagen buiten de huidige sessie.",
+    "customer_text": "We slaan geen persoonlijke of medische gegevens van je op."
   }
 ]

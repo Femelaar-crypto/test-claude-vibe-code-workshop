@@ -1,34 +1,46 @@
 # Architecture
 
+The reference implementation of everything below is `demo/template.html`. When the Streamlit app and the demo disagree, the demo is right until someone changes it deliberately.
+
 ## Request Flow
 
-1. **Ask** (`pages/1_ask.py`) — employee opens the Ask screen. If `TriageState.complete` is `False`, the page asks only the next unanswered triage question, in fixed order:
-   1. Who is the product for? → `intended_for`
-   2. What's the nature of the complaints? → `complaints`
-   3. Since when? → `duration`
-   4. Already tried something? → `prior_remedies`
-2. Once all four fields are set, `TriageState.complete = True` and the page accepts the free-text question.
-3. **AI Service** (`services/ai_service.py`) builds a `QueryResult`:
-   - Calls `services/data_service.py` to search `products.json` / `promotions.json` / `policies.json` for matches
-   - Composes a system prompt containing the triage answers, matched products/promotions/policies, and instructions to produce two outputs
-   - Calls the Anthropic API
-   - Parses the response into `employee_answer` and `customer_answer`
-4. **Employee View** (`pages/2_employee_answer.py`) renders `employee_answer` plus `matched_products`, `matched_promotions`, `applicable_policies` as sources.
-5. **Customer View** (`pages/3_customer_view.py`) renders `customer_answer` only — no internal context, no source citations, no employee-only language.
-6. **History** (`pages/4_history.py`) reads past `QueryResult`s from `services/session_service.py` and lists recent and trending questions.
+1. **Ask** (`pages/1_ask.py`): the employee types the customer's question in plain Dutch.
+2. **Classify** (`services/triage_service.py`): `symptom`, `policy`, `promo`, `lookup` or `unknown`.
+   - `policy`: match `policies.json` keywords, answer with `description` (employee) and `customer_text` (customer).
+   - `promo`: list promotions active today, filtered by product or category if one was named.
+   - `lookup`: product named without a complaint ("hebben jullie pleisters?"): answer with the product, price, active promotion and any age restriction.
+   - `unknown`: say honestly that there is no information, suggest rephrasing.
+   - `symptom`: continue below.
+3. **Extract** what the sentence already contains: who (with age bucket for children), complaint tags, duration, prior remedies (and whether they failed, and which active ingredient), pregnancy.
+4. **Short-circuit on no match**: if the complaint matches no product's `symptoms`, answer at once that nothing suitable is in the assortment. No triage questions for a question that has no product answer.
+5. **Ask only the gaps**, one at a time: who, child's age, complaints, duration, prior remedies. Chips plus free text; free text runs through the same extractor.
+6. **Search** (`services/data_service.py`): score products by symptom-tag overlap, product name match, category match. A promotion adds a small tie-break bonus only to products that already match.
+7. **Safety** (`services/safety_service.py`): split candidates into allowed and blocked with reasons (age, sales restriction, pregnancy, tried without effect); flag "consult the pharmacist" cases; decide escalation (`none`, `pharmacist`, `doctor`, `urgent`).
+8. **Compose** (`services/ai_service.py`): the model receives the structured outcome (recommended, alternatives, blocked with reasons, promotions, policies, escalation) and writes `employee_answer` and `customer_answer` in Dutch. It cannot add products. The demo's `LIVE_SYSTEM` prompt and JSON-schema output are the template.
+9. **Employee View**: escalation banner first, then answer, triage summary, safety checks (passed and blocked), recommendation with usage, promotion and disclaimer, alternatives, policies, sources as record ids.
+10. **Customer View**: product, price (promo price when `type == percent_off`), short answer, promotion, age note. Presentation mode fills the screen and hides all employee chrome.
+11. **History**: every `QueryResult`, reopenable; "most asked" computed from the session, not hardcoded.
 
 ## Data Layer
 
-`services/data_service.py` loads the three JSON files with `st.cache_data` and exposes search functions (e.g. `search_products(query: str) -> list[dict]`). No database, no writes back to disk — the JSON files are read-only reference data.
+`services/data_service.py` loads the three JSON files with `st.cache_data`. Read-only reference data; no writes back to disk.
 
-## Promotion Prioritization
+Product fields that drive behaviour:
 
-When a matched product also has an active promotion (its date range covers today), the AI service surfaces it ahead of non-promoted matches and mentions the promotion explicitly in both views.
-
-## Compliance
-
-Any matched product with a non-null `age_restriction` or `disclaimer` field must carry that warning into both the employee and customer answers. This is checked by `answer-quality-reviewer`.
+| Field | Used for |
+|---|---|
+| `symptoms` | search (tag overlap) |
+| `min_age` | block below this age |
+| `age_restriction` | sales restriction (ID check), block for minors |
+| `pregnancy_safe` | `true` allowed, `false` blocked, `null` flagged "consult" |
+| `active_ingredient` | "tried without effect" exclusion, alternatives with a different ingredient |
+| `usage` | dosage line in both views |
+| `disclaimer` | verbatim in the employee view, plain in the customer view |
 
 ## Session State
 
-Everything — triage progress, conversation history, the current `QueryResult` — lives in `st.session_state` via `services/session_service.py`, since Streamlit reruns the whole script on every interaction.
+Triage progress, the current `QueryResult` and history live in `st.session_state` via `services/session_service.py`, because Streamlit reruns the whole script on every interaction.
+
+## The demo and the app
+
+`demo/index.html` runs the same pipeline in the browser with a deterministic composition step (templated Dutch) and an optional live step that calls Claude with the presenter's own key. The app keeps the key server-side and uses the `anthropic` package; the pipeline stays the same.

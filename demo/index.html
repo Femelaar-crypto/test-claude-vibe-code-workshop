@@ -1,0 +1,814 @@
+<!doctype html>
+<html lang="nl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>DrugStore Assistant AI</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@600;700&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
+<style>
+  :root {
+    --bg: oklch(98% 0.012 75);
+    --surface: oklch(99.5% 0.004 75);
+    --surface-2: oklch(96% 0.01 75);
+    --border: oklch(89% 0.012 75);
+    --text: oklch(24% 0.02 55);
+    --muted: oklch(50% 0.02 55);
+    --accent: oklch(48% 0.09 200);
+    --accent-dark: oklch(40% 0.09 200);
+    --accent-soft: oklch(94% 0.035 200);
+    --on-accent: #fff;
+    --ok: oklch(46% 0.1 150);
+    --ok-soft: oklch(94% 0.045 150);
+    --warn: oklch(50% 0.12 70);
+    --warn-soft: oklch(95% 0.05 80);
+    --danger: oklch(48% 0.13 25);
+    --danger-soft: oklch(94% 0.04 25);
+    --shadow: 0 1px 2px oklch(0% 0 0 / 0.04), 0 4px 14px oklch(0% 0 0 / 0.06);
+    --radius: 12px;
+    --display: 'Bricolage Grotesque', 'Avenir Next', 'Segoe UI', system-ui, sans-serif;
+    --body: 'IBM Plex Sans', 'Segoe UI', system-ui, sans-serif;
+    --mono: ui-monospace, 'SF Mono', Menlo, Consolas, monospace;
+    color-scheme: light dark;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: oklch(17% 0.01 60); --surface: oklch(22% 0.012 60); --surface-2: oklch(26% 0.012 60);
+      --border: oklch(33% 0.012 60); --text: oklch(94% 0.01 75); --muted: oklch(70% 0.015 70);
+      --accent: oklch(74% 0.1 200); --accent-dark: oklch(82% 0.09 200); --accent-soft: oklch(30% 0.05 200);
+      --on-accent: oklch(15% 0.02 200);
+      --ok: oklch(76% 0.12 150); --ok-soft: oklch(28% 0.06 150);
+      --warn: oklch(80% 0.13 75); --warn-soft: oklch(30% 0.06 75);
+      --danger: oklch(76% 0.14 25); --danger-soft: oklch(30% 0.07 25);
+      --shadow: 0 1px 2px oklch(0% 0 0 / 0.3), 0 4px 14px oklch(0% 0 0 / 0.35);
+    }
+  }
+  :root[data-theme="dark"] {
+    --bg: oklch(17% 0.01 60); --surface: oklch(22% 0.012 60); --surface-2: oklch(26% 0.012 60);
+    --border: oklch(33% 0.012 60); --text: oklch(94% 0.01 75); --muted: oklch(70% 0.015 70);
+    --accent: oklch(74% 0.1 200); --accent-dark: oklch(82% 0.09 200); --accent-soft: oklch(30% 0.05 200);
+    --on-accent: oklch(15% 0.02 200);
+    --ok: oklch(76% 0.12 150); --ok-soft: oklch(28% 0.06 150);
+    --warn: oklch(80% 0.13 75); --warn-soft: oklch(30% 0.06 75);
+    --danger: oklch(76% 0.14 25); --danger-soft: oklch(30% 0.07 25);
+    --shadow: 0 1px 2px oklch(0% 0 0 / 0.3), 0 4px 14px oklch(0% 0 0 / 0.35);
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; height: 100%; }
+  body { background: var(--bg); color: var(--text); font-family: var(--body); font-size: 14px; line-height: 1.5; }
+  a { color: var(--accent); } a:hover { color: var(--accent-dark); }
+  button { font-family: inherit; font-size: inherit; color: inherit; }
+  button:focus-visible, input:focus-visible, textarea:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  h1, h2, h3 { font-family: var(--display); font-weight: 600; margin: 0; text-wrap: balance; letter-spacing: -0.01em; }
+  h1 { font-size: 26px; } h2 { font-size: 19px; } h3 { font-size: 15px; }
+  p { margin: 0; }
+  .muted { color: var(--muted); }
+  .small { font-size: 13px; }
+  .label { font-size: 11.5px; font-weight: 600; letter-spacing: .06em; text-transform: uppercase; color: var(--muted); }
+  .icon { width: 18px; height: 18px; flex-shrink: 0; fill: none; stroke: currentColor; stroke-width: 1.75; stroke-linecap: round; stroke-linejoin: round; }
+  .icon.sm { width: 14px; height: 14px; }
+
+  .app { display: grid; grid-template-rows: 60px 1fr; height: 100vh; }
+  .topbar { display: flex; align-items: center; justify-content: space-between; padding: 0 24px; border-bottom: 1px solid var(--border); background: var(--surface); }
+  .brand { display: flex; align-items: center; gap: 10px; font-family: var(--display); font-weight: 700; font-size: 17px; }
+  .brand .icon { width: 24px; height: 24px; color: var(--accent); }
+  .topbar-right { display: flex; align-items: center; gap: 10px; }
+  .mode-pill { display: inline-flex; align-items: center; gap: 7px; font-size: 12.5px; font-weight: 500; padding: 6px 12px; border-radius: 999px; border: 1px solid var(--border); background: var(--surface-2); }
+  .mode-pill .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--muted); }
+  .mode-pill.live .dot { background: var(--ok); }
+  .icon-btn { display: inline-flex; align-items: center; justify-content: center; width: 36px; height: 36px; border-radius: 10px; border: 1px solid var(--border); background: var(--surface); cursor: pointer; }
+  .icon-btn:hover { background: var(--surface-2); }
+
+  .body { display: grid; grid-template-columns: 224px 1fr; min-height: 0; }
+  .sidebar { border-right: 1px solid var(--border); padding: 18px 12px; display: flex; flex-direction: column; gap: 4px; background: var(--surface); }
+  .nav { display: flex; align-items: center; gap: 10px; padding: 10px 12px; border-radius: 10px; border: none; background: transparent; text-align: left; cursor: pointer; color: var(--muted); font-weight: 500; min-height: 44px; }
+  .nav:hover { background: var(--surface-2); }
+  .nav.active { background: var(--accent-soft); color: var(--accent-dark); font-weight: 600; }
+  .nav .badge { margin-left: auto; font-size: 11px; font-weight: 600; background: var(--accent); color: var(--on-accent); padding: 2px 7px; border-radius: 999px; }
+  .sidebar .spacer { flex: 1; }
+  .sidebar .demo-note { font-size: 11.5px; color: var(--muted); padding: 10px 12px; line-height: 1.45; border-top: 1px solid var(--border); }
+
+  .main { overflow-y: auto; padding: 32px 40px 48px; }
+  .view { max-width: 920px; }
+  .view-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; margin-bottom: 22px; }
+  .view-head p { margin-top: 4px; }
+
+  .card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 22px 24px; }
+  .card + .card, .grid + .card, .card + .grid { margin-top: 16px; }
+  .card.lift { box-shadow: var(--shadow); }
+  .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+  @media (max-width: 860px) { .grid { grid-template-columns: 1fr; } .body { grid-template-columns: 64px 1fr; } .nav span.txt, .sidebar .demo-note, .sidebar .btn-primary span { display: none; } .main { padding: 20px; } }
+
+  .textarea { width: 100%; min-height: 96px; padding: 14px 16px; border-radius: 10px; border: 1.5px solid var(--border); font: inherit; font-size: 15px; background: var(--surface); color: var(--text); resize: vertical; }
+  .input { flex: 1; padding: 11px 14px; border-radius: 10px; border: 1.5px solid var(--border); font: inherit; background: var(--surface); color: var(--text); min-height: 44px; }
+  .row { display: flex; gap: 10px; align-items: center; }
+  .row.wrap { flex-wrap: wrap; }
+  .btn-primary { display: inline-flex; align-items: center; justify-content: center; gap: 8px; background: var(--accent); color: var(--on-accent); border: none; padding: 0 18px; min-height: 44px; border-radius: 10px; font-weight: 600; cursor: pointer; }
+  .btn-primary:hover { background: var(--accent-dark); }
+  .btn-primary:disabled { opacity: .45; cursor: not-allowed; }
+  .btn-outline { display: inline-flex; align-items: center; justify-content: center; gap: 8px; background: transparent; color: var(--accent); border: 1.5px solid var(--accent); padding: 0 16px; min-height: 44px; border-radius: 10px; font-weight: 600; cursor: pointer; }
+  .btn-outline:hover { background: var(--accent-soft); }
+  .btn-ghost { background: none; border: none; color: var(--muted); font-weight: 500; cursor: pointer; padding: 8px 4px; min-height: 44px; display: inline-flex; align-items: center; gap: 6px; }
+  .btn-ghost:hover { color: var(--text); }
+  .link { background: none; border: none; color: var(--accent); font-weight: 500; cursor: pointer; padding: 8px 0; min-height: 44px; }
+
+  .chips { display: flex; flex-wrap: wrap; gap: 8px; }
+  .chip { display: inline-flex; align-items: center; min-height: 40px; padding: 8px 14px; border-radius: 999px; border: 1.5px solid var(--border); background: var(--surface); cursor: pointer; font-weight: 500; }
+  .chip:hover { border-color: var(--accent); }
+  .chip.example { background: var(--surface-2); border-color: transparent; font-weight: 400; color: var(--text); text-align: left; }
+  .chip.example:hover { border-color: var(--accent); }
+  .chip-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+  .chip-grid .chip { border-radius: 10px; min-height: 48px; padding: 12px 16px; justify-content: flex-start; }
+
+  .quote { font-family: var(--display); font-size: 18px; line-height: 1.35; }
+  .found { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; }
+  .tag { display: inline-flex; align-items: center; gap: 6px; font-size: 12.5px; padding: 5px 10px; border-radius: 8px; background: var(--surface-2); color: var(--muted); }
+  .tag.on { background: var(--ok-soft); color: var(--ok); font-weight: 500; }
+  .tag.ask { border: 1.5px dashed var(--border); background: transparent; }
+
+  .banner { display: flex; gap: 12px; align-items: flex-start; padding: 14px 16px; border-radius: 10px; font-size: 14px; line-height: 1.5; margin-bottom: 16px; }
+  .banner .icon { margin-top: 2px; }
+  .banner.doctor, .banner.urgent { background: var(--danger-soft); color: var(--danger); }
+  .banner.pharmacist { background: var(--warn-soft); color: var(--warn); }
+  .banner.info { background: var(--accent-soft); color: var(--accent-dark); }
+  .banner strong { font-weight: 600; }
+
+  .answer { font-size: 15px; line-height: 1.65; }
+  .kv { display: flex; justify-content: space-between; gap: 16px; padding: 8px 0; border-bottom: 1px solid var(--border); font-size: 13.5px; }
+  .kv:last-child { border-bottom: none; }
+  .kv .k { color: var(--muted); }
+  .kv .v { font-weight: 500; text-align: right; }
+  .check { display: flex; gap: 10px; align-items: flex-start; padding: 7px 0; font-size: 13.5px; }
+  .check .icon { width: 16px; height: 16px; margin-top: 2px; }
+  .check.ok { color: var(--ok); } .check.bad { color: var(--danger); } .check.warn { color: var(--warn); }
+  .check .t { color: var(--text); }
+
+  .product { display: flex; justify-content: space-between; align-items: flex-start; gap: 16px; }
+  .product .name { font-family: var(--display); font-weight: 600; font-size: 17px; }
+  .product .price { font-family: var(--display); font-weight: 700; font-size: 20px; color: var(--accent); white-space: nowrap; font-variant-numeric: tabular-nums; }
+  .product .price s { color: var(--muted); font-weight: 500; font-size: 14px; margin-right: 6px; }
+  .usage { margin-top: 10px; font-size: 13.5px; color: var(--muted); }
+  .note { display: flex; gap: 10px; align-items: flex-start; padding: 11px 13px; border-radius: 10px; font-size: 13px; line-height: 1.5; margin-top: 12px; }
+  .note .icon { width: 16px; height: 16px; margin-top: 2px; }
+  .note.promo { background: var(--ok-soft); color: var(--ok); }
+  .note.caution { background: var(--danger-soft); color: var(--danger); }
+  .note.consult { background: var(--warn-soft); color: var(--warn); }
+  .alt { display: flex; justify-content: space-between; gap: 12px; padding: 10px 0; border-bottom: 1px solid var(--border); font-size: 13.5px; }
+  .alt:last-child { border-bottom: none; }
+  .alt .why { color: var(--muted); }
+  .src { display: inline-block; font-family: var(--mono); font-size: 12px; padding: 4px 9px; border-radius: 6px; border: 1px solid var(--border); background: var(--surface-2); color: var(--muted); margin: 0 6px 6px 0; }
+
+  .spin { width: 22px; height: 22px; border-radius: 50%; border: 2.5px solid var(--border); border-top-color: var(--accent); animation: spin .8s linear infinite; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  @media (prefers-reduced-motion: reduce) { .spin { animation-duration: 2s; } }
+
+  .hist { display: flex; justify-content: space-between; align-items: center; gap: 16px; width: 100%; text-align: left; padding: 14px 4px; border: none; border-bottom: 1px solid var(--border); background: none; cursor: pointer; min-height: 56px; }
+  .hist:last-child { border-bottom: none; }
+  .hist:hover .q { color: var(--accent-dark); }
+  .hist .q { font-weight: 500; }
+  .hist .m { font-size: 12.5px; color: var(--muted); margin-top: 2px; }
+  .hist .c { font-size: 12.5px; color: var(--muted); white-space: nowrap; }
+  .trend { display: inline-flex; align-items: center; gap: 8px; padding: 8px 14px; border-radius: 999px; background: var(--accent-soft); color: var(--accent-dark); font-weight: 500; font-size: 13px; }
+  .trend b { font-weight: 700; }
+
+  .customer-card { max-width: 560px; }
+  .customer-card .answer { font-size: 17px; }
+
+  /* Settings popover */
+  .pop { position: absolute; top: 56px; right: 24px; width: 380px; z-index: 20; }
+  .pop .card { box-shadow: var(--shadow); }
+  .radio { display: flex; gap: 12px; align-items: flex-start; padding: 10px 0; cursor: pointer; }
+  .radio input { margin-top: 4px; }
+  .radio .d { font-size: 12.5px; color: var(--muted); }
+
+  /* Presentation mode */
+  #present { position: fixed; inset: 0; background: var(--bg); z-index: 50; display: none; padding: 6vh 8vw; overflow: auto; }
+  #present.on { display: block; }
+  #present .close { position: absolute; top: 20px; right: 24px; }
+  #present .pname { font-family: var(--display); font-size: clamp(28px, 4vw, 44px); font-weight: 700; line-height: 1.15; }
+  #present .pprice { font-family: var(--display); font-size: clamp(26px, 3.6vw, 40px); font-weight: 700; color: var(--accent); margin-top: 8px; }
+  #present .pprice s { color: var(--muted); font-size: .6em; font-weight: 500; margin-right: 10px; }
+  #present .ptext { font-size: clamp(20px, 2.4vw, 27px); line-height: 1.5; margin-top: 28px; max-width: 30ch; }
+  #present .note { font-size: clamp(16px, 1.8vw, 20px); padding: 16px 20px; margin-top: 24px; max-width: 40ch; }
+  #present .note .icon { width: 22px; height: 22px; }
+  .sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); }
+</style>
+</head>
+<body>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <defs>
+    <symbol id="i-cross" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 8v8M8 12h8"/></symbol>
+    <symbol id="i-chat" viewBox="0 0 24 24"><path d="M4 6a2 2 0 012-2h12a2 2 0 012 2v8a2 2 0 01-2 2H9l-4 3v-3H6a2 2 0 01-2-2V6z"/></symbol>
+    <symbol id="i-clip" viewBox="0 0 24 24"><rect x="6" y="4" width="12" height="16" rx="2"/><path d="M9 4V3a1 1 0 011-1h4a1 1 0 011 1v1"/><path d="M9 10h6M9 14h6"/></symbol>
+    <symbol id="i-user" viewBox="0 0 24 24"><circle cx="12" cy="8" r="3.2"/><path d="M5 20c0-3.5 3.1-6 7-6s7 2.5 7 6"/></symbol>
+    <symbol id="i-clock" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3.5 2"/></symbol>
+    <symbol id="i-send" viewBox="0 0 24 24"><path d="M4 12l16-8-6 16-2.5-6.5L4 12z"/></symbol>
+    <symbol id="i-check" viewBox="0 0 24 24"><path d="M4 12l5 5 11-11"/></symbol>
+    <symbol id="i-x" viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"/></symbol>
+    <symbol id="i-alert" viewBox="0 0 24 24"><path d="M12 3l10 18H2L12 3z"/><path d="M12 10v4"/><path d="M12 16.6v.1"/></symbol>
+    <symbol id="i-tag" viewBox="0 0 24 24"><path d="M11 3H4v7l10 10 7-7L11 3z"/><path d="M8 8v.01"/></symbol>
+    <symbol id="i-shield" viewBox="0 0 24 24"><path d="M12 3l7 3v6c0 4.5-3 7.5-7 9-4-1.5-7-4.5-7-9V6l7-3z"/></symbol>
+    <symbol id="i-gear" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 00.3 1.8l.1.1a2 2 0 01-2.8 2.8l-.1-.1a1.7 1.7 0 00-1.8-.3 1.7 1.7 0 00-1 1.5V21a2 2 0 01-4 0v-.1a1.7 1.7 0 00-1.1-1.5 1.7 1.7 0 00-1.8.3l-.1.1a2 2 0 01-2.8-2.8l.1-.1a1.7 1.7 0 00.3-1.8 1.7 1.7 0 00-1.5-1H3a2 2 0 010-4h.1a1.7 1.7 0 001.5-1.1 1.7 1.7 0 00-.3-1.8l-.1-.1a2 2 0 012.8-2.8l.1.1a1.7 1.7 0 001.8.3H9a1.7 1.7 0 001-1.5V3a2 2 0 014 0v.1a1.7 1.7 0 001 1.5 1.7 1.7 0 001.8-.3l.1-.1a2 2 0 012.8 2.8l-.1.1a1.7 1.7 0 00-.3 1.8V9a1.7 1.7 0 001.5 1H21a2 2 0 010 4h-.1a1.7 1.7 0 00-1.5 1z"/></symbol>
+    <symbol id="i-expand" viewBox="0 0 24 24"><path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/></symbol>
+    <symbol id="i-back" viewBox="0 0 24 24"><path d="M14 5l-6 7 6 7"/></symbol>
+    <symbol id="i-stetho" viewBox="0 0 24 24"><path d="M6 3v6a4 4 0 008 0V3"/><path d="M10 13v3a5 5 0 0010 0v-1"/><circle cx="20" cy="13" r="2"/></symbol>
+  </defs>
+</svg>
+
+<script id="data" type="application/json">{"products": [{"id": "p001", "name": "Paracetamol 500mg Tabletten (20 stuks)", "category": "Pijnstillers", "price_eur": 2.49, "age_restriction": null, "min_age": 12, "pregnancy_safe": true, "active_ingredient": "paracetamol", "symptoms": ["hoofdpijn", "koorts", "pijn", "griep", "verkoudheid", "kiespijn", "spierpijn", "menstruatiepijn", "rugpijn"], "usage": "1-2 tabletten per keer, maximaal 6 tabletten per dag", "disclaimer": "Overschrijd niet de aanbevolen dosering. Raadpleeg een arts bij aanhoudende klachten na 3 dagen.", "description": "Tabletten tegen pijn en koorts, geschikt voor volwassenen en kinderen vanaf 12 jaar."}, {"id": "p002", "name": "Ibuprofen 400mg Tabletten (20 stuks)", "category": "Pijnstillers", "price_eur": 3.29, "age_restriction": null, "min_age": 12, "pregnancy_safe": false, "active_ingredient": "ibuprofen", "symptoms": ["hoofdpijn", "pijn", "spierpijn", "menstruatiepijn", "ontsteking", "kiespijn", "rugpijn", "gewrichtspijn", "koorts"], "usage": "1 tablet per keer, maximaal 3 per dag, innemen met wat voedsel", "disclaimer": "Niet gebruiken tijdens de laatste 3 maanden van de zwangerschap. Raadpleeg een arts of apotheker bij maagklachten.", "description": "Ontstekingsremmende pijnstiller voor hoofdpijn, spierpijn en menstruatieklachten."}, {"id": "p003", "name": "Vitamine D3 1000IE Tabletten (90 stuks)", "category": "Vitamines & Supplementen", "price_eur": 8.99, "age_restriction": null, "min_age": 0, "pregnancy_safe": true, "active_ingredient": "cholecalciferol", "symptoms": ["vermoeidheid", "weerstand", "botten", "winter", "vitamine d"], "usage": "1 tablet per dag", "disclaimer": null, "description": "Ondersteunt botten, spieren en het immuunsysteem, met name in de wintermaanden."}, {"id": "p004", "name": "Vitamine C 1000mg Bruistabletten (20 stuks)", "category": "Vitamines & Supplementen", "price_eur": 5.49, "age_restriction": null, "min_age": 6, "pregnancy_safe": true, "active_ingredient": "ascorbinezuur", "symptoms": ["weerstand", "vermoeidheid", "verkoudheid", "vitamine c"], "usage": "1 bruistablet per dag, oplossen in een glas water", "disclaimer": null, "description": "Draagt bij aan een normale weerstand en vermindert vermoeidheid."}, {"id": "p005", "name": "Multivitamine Complex (60 stuks)", "category": "Vitamines & Supplementen", "price_eur": 11.95, "age_restriction": null, "min_age": 12, "pregnancy_safe": null, "active_ingredient": null, "symptoms": ["vermoeidheid", "weerstand", "vitamines"], "usage": "1 tablet per dag bij de maaltijd", "disclaimer": null, "description": "Dagelijkse aanvulling met 12 vitamines en 8 mineralen."}, {"id": "p006", "name": "Neusspray Xylometazoline 0,1% (10ml)", "category": "Verkoudheid & Griep", "price_eur": 3.99, "age_restriction": null, "min_age": 6, "pregnancy_safe": null, "active_ingredient": "xylometazoline", "symptoms": ["verstopte neus", "verkoudheid", "hooikoorts", "snotneus"], "usage": "1 verstuiving per neusgat, maximaal 3 keer per dag, niet langer dan 7 dagen", "disclaimer": "Niet langer dan 7 dagen achtereen gebruiken. Niet geschikt voor kinderen onder 6 jaar.", "description": "Verlicht een verstopte neus bij verkoudheid of hooikoorts."}, {"id": "p007", "name": "Keelpastilles Honing & Citroen (24 stuks)", "category": "Verkoudheid & Griep", "price_eur": 2.99, "age_restriction": null, "min_age": 6, "pregnancy_safe": true, "active_ingredient": null, "symptoms": ["keelpijn", "hoest", "droge hoest", "verkoudheid", "schorre keel"], "usage": "1 pastille langzaam laten smelten, maximaal 8 per dag", "disclaimer": null, "description": "Verzacht een geïrriteerde keel en droge hoest."}, {"id": "p008", "name": "Hoestdrank Droge Hoest (150ml)", "category": "Verkoudheid & Griep", "price_eur": 6.49, "age_restriction": null, "min_age": 12, "pregnancy_safe": null, "active_ingredient": "noscapine", "symptoms": ["hoest", "droge hoest", "prikkelhoest", "verkoudheid"], "usage": "15 ml per keer, maximaal 4 keer per dag", "disclaimer": "Raadpleeg een arts als de hoest langer dan een week aanhoudt.", "description": "Verlicht een droge, prikkelende hoest."}, {"id": "p009", "name": "Melatonine 1mg Tabletten (30 stuks)", "category": "Slaap", "price_eur": 7.49, "age_restriction": 18, "min_age": 18, "pregnancy_safe": false, "active_ingredient": "melatonine", "symptoms": ["slaapproblemen", "inslapen", "slapeloosheid", "jetlag"], "usage": "1 tablet, 30 minuten voor het slapen gaan", "disclaimer": "Niet geschikt onder de 18 jaar. Gebruik niet in combinatie met alcohol. Raadpleeg een arts bij langdurig gebruik.", "description": "Ondersteunt het inslapen bij tijdelijke slaapproblemen."}, {"id": "p010", "name": "Nicotine Kauwgom 4mg Freshmint (30 stuks)", "category": "Stoppen met Roken", "price_eur": 12.99, "age_restriction": 18, "min_age": 18, "pregnancy_safe": false, "active_ingredient": "nicotine", "symptoms": ["stoppen met roken", "nicotine"], "usage": "1 stuk kauwen bij trek, maximaal 15 per dag", "disclaimer": "Niet geschikt onder de 18 jaar of voor niet-rokers. Raadpleeg een arts of apotheker bij langdurig gebruik.", "description": "Helpt ontwenningsverschijnselen bij het stoppen met roken te verminderen."}, {"id": "p011", "name": "Aftersun Lotion (200ml)", "category": "Huidverzorging", "price_eur": 6.99, "age_restriction": null, "min_age": 0, "pregnancy_safe": true, "active_ingredient": null, "symptoms": ["zonnebrand", "huidirritatie", "droge huid", "rode huid"], "usage": "Royaal aanbrengen op de huid na het zonnen", "disclaimer": null, "description": "Verkoelt en hydrateert de huid na blootstelling aan de zon."}, {"id": "p012", "name": "Vochtinbrengende Dagcrème SPF15 (50ml)", "category": "Huidverzorging", "price_eur": 9.99, "age_restriction": null, "min_age": 0, "pregnancy_safe": true, "active_ingredient": null, "symptoms": ["droge huid", "huidverzorging", "zonbescherming"], "usage": "Dagelijks aanbrengen op gezicht en hals", "disclaimer": null, "description": "Hydrateert de huid en biedt lichte bescherming tegen UV-straling."}, {"id": "p013", "name": "Anti-Acne Gel Benzoylperoxide 5% (30ml)", "category": "Huidverzorging", "price_eur": 8.49, "age_restriction": null, "min_age": 12, "pregnancy_safe": null, "active_ingredient": "benzoylperoxide", "symptoms": ["acne", "puistjes", "onzuivere huid"], "usage": "1-2 keer per dag dun aanbrengen op de aangedane huid", "disclaimer": "Kan de huid gevoelig maken voor zonlicht. Vermijd contact met ogen en kleding.", "description": "Vermindert onzuiverheden en puistjes bij milde tot matige acne."}, {"id": "p014", "name": "Pleisters Assortiment (40 stuks)", "category": "Eerste Hulp", "price_eur": 3.49, "age_restriction": null, "min_age": 0, "pregnancy_safe": true, "active_ingredient": null, "symptoms": ["wond", "schaafwond", "snee", "blaar"], "usage": "Op een schone, droge huid aanbrengen", "disclaimer": null, "description": "Wondpleisters in verschillende maten voor kleine schaafwonden en sneetjes."}, {"id": "p015", "name": "Orale Rehydratie Poeder (6 sachets)", "category": "Maag & Darm", "price_eur": 5.99, "age_restriction": null, "min_age": 0, "pregnancy_safe": true, "active_ingredient": "orale rehydratiezouten", "symptoms": ["diarree", "braken", "uitdroging", "buikgriep"], "usage": "1 sachet oplossen in 200 ml water, drinken na elke waterdunne ontlasting", "disclaimer": "Raadpleeg een arts bij aanhoudende diarree langer dan 2 dagen, vooral bij jonge kinderen of ouderen.", "description": "Vult vocht en zouten aan bij diarree of braken."}], "promotions": [{"id": "promo001", "product_ids": ["p004"], "type": "percent_off", "title": "20% korting op Vitamine C Bruistabletten", "description": "Versterk de weerstand voor het najaar begint.", "discount_percent": 20, "start_date": "2026-08-15", "end_date": "2026-09-30"}, {"id": "promo002", "product_ids": ["p011", "p012"], "type": "second_half_price", "title": "2e artikel halve prijs op huidverzorging", "description": "Geldig op aftersun en dagcrème, zolang de voorraad strekt.", "discount_percent": 50, "start_date": "2026-08-01", "end_date": "2026-09-15"}, {"id": "promo003", "product_ids": ["p003", "p005"], "type": "percent_off", "title": "15% korting op vitamines voor het najaar", "description": "Bereid het immuunsysteem voor op de herfst.", "discount_percent": 15, "start_date": "2026-09-01", "end_date": "2026-10-31"}], "policies": [{"id": "policy001", "category": "age_restriction", "title": "Leeftijdsgrens verkoop", "keywords": ["leeftijd", "legitimatie", "minderjarig", "18 jaar", "id kaart"], "description": "Producten met een leeftijdsgrens (age_restriction) mogen niet verkocht worden aan klanten die daar niet aan voldoen. Vraag bij twijfel naar legitimatie.", "customer_text": "Voor sommige producten geldt een minimumleeftijd. We kunnen dan om een legitimatiebewijs vragen."}, {"id": "policy002", "category": "medical_disclaimer", "title": "Medisch advies", "keywords": ["arts", "apotheker", "dokter", "huisarts", "medisch advies", "diagnose"], "description": "Het personeel geeft geen medische diagnoses. Verwijs bij twijfel, aanhoudende klachten, zwangerschap, of interactie met andere medicatie altijd door naar een arts of apotheker.", "customer_text": "Wij geven geen medische diagnoses. Bij twijfel, aanhoudende klachten of medicijngebruik kun je het beste een arts of apotheker raadplegen."}, {"id": "policy003", "category": "returns", "title": "Retourbeleid", "keywords": ["retour", "retourneren", "terugbrengen", "ruilen", "geld terug", "terugsturen", "garantie"], "description": "Geopende geneesmiddelen en verzorgingsproducten kunnen om hygiënische redenen niet worden geretourneerd, tenzij het product defect is.", "customer_text": "Ongeopende producten kun je met de bon retourneren. Geopende geneesmiddelen en verzorgingsproducten nemen we om hygiënische redenen alleen terug als ze defect zijn."}, {"id": "policy004", "category": "data_privacy", "title": "Klantgegevens", "keywords": ["privacy", "gegevens", "opslaan", "persoonlijke informatie", "avg"], "description": "Er wordt geen persoonlijke of medische informatie van klanten opgeslagen buiten de huidige sessie.", "customer_text": "We slaan geen persoonlijke of medische gegevens van je op."}]}</script>
+
+<div class="app" id="app">
+  <div class="topbar">
+    <div class="brand"><svg class="icon"><use href="#i-cross"/></svg>DrugStore Assistant AI</div>
+    <div class="topbar-right">
+      <span class="mode-pill" id="modePill"><span class="dot"></span><span id="modeLabel">Gesimuleerd</span></span>
+      <button class="icon-btn" id="settingsBtn" aria-label="Instellingen" title="Instellingen"><svg class="icon"><use href="#i-gear"/></svg></button>
+    </div>
+  </div>
+  <div class="body">
+    <nav class="sidebar" id="sidebar"></nav>
+    <main class="main"><div class="view" id="view"></div></main>
+  </div>
+</div>
+<div class="pop" id="pop" hidden></div>
+<div id="present" role="dialog" aria-label="Klantweergave op volledig scherm"></div>
+
+<script>
+'use strict';
+const DATA = JSON.parse(document.getElementById('data').textContent);
+const PRODUCTS = DATA.products, PROMOTIONS = DATA.promotions, POLICIES = DATA.policies;
+const TODAY = new Date();
+
+/* ---------- vocabulary (demo NLU) ---------- */
+const SYMPTOM_SYNONYMS = {
+  'hoofdpijn': ['hoofdpijn', 'migraine', 'koppijn', 'hoofd doet pijn'],
+  'keelpijn': ['keelpijn', 'zere keel', 'pijnlijke keel', 'keel doet pijn', 'schorre keel'],
+  'hoest': ['hoest', 'hoesten', 'kuch', 'kuchen', 'prikkelhoest', 'droge hoest'],
+  'verkoudheid': ['verkouden', 'verkoudheid', 'snotteren', 'loopneus', 'griepje', 'griep'],
+  'verstopte neus': ['verstopte neus', 'dichte neus', 'neus zit dicht', 'neus dicht', 'snotneus'],
+  'koorts': ['koorts', 'koortsig', 'verhoging'],
+  'slaapproblemen': ['slaapproblemen', 'slecht slapen', 'slaap slecht', 'slaapt slecht', 'slapeloos', 'slapeloosheid', 'niet in slaap', 'inslapen', 'doorslapen', 'wakker liggen', 'slaap niet', 'slaapt niet', 'slapen', 'slaap', 'slaapt', 'geslapen', 'jetlag'],
+  'spierpijn': ['spierpijn', 'spieren'],
+  'rugpijn': ['rugpijn', 'rug'],
+  'menstruatiepijn': ['menstruatiepijn', 'menstruatie', 'ongesteld', 'buikkrampen'],
+  'kiespijn': ['kiespijn', 'tandpijn'],
+  'gewrichtspijn': ['gewrichtspijn', 'gewrichten', 'gewricht', 'artrose'],
+  'pijn': ['pijn'],
+  'diarree': ['diarree', 'dunne ontlasting', 'buikgriep', 'aan de dunne'],
+  'braken': ['braken', 'overgeven', 'misselijk', 'spugen'],
+  'zonnebrand': ['zonnebrand', 'verbrand', 'zonverbrand', 'teveel zon', 'in de zon'],
+  'huidirritatie': ['huidirritatie', 'jeuk', 'rode huid', 'huid irritatie', 'irritatie', 'uitslag', 'rode plekken'],
+  'droge huid': ['droge huid', 'schrale huid', 'droog gezicht'],
+  'acne': ['acne', 'puistjes', 'puisten', 'pukkels', 'onzuivere huid'],
+  'wond': ['wond', 'schaafwond', 'snee', 'gesneden', 'geschaafd', 'blaar', 'wondje'],
+  'vermoeidheid': ['vermoeidheid', 'vermoeid', 'moe', 'futloos', 'weinig energie', 'geen energie'],
+  'weerstand': ['weerstand', 'immuunsysteem', 'afweer'],
+  'stoppen met roken': ['stoppen met roken', 'roken', 'sigaret', 'sigaretten', 'nicotine'],
+  'hooikoorts': ['hooikoorts', 'pollen', 'allergie'],
+  'uitdroging': ['uitdroging', 'uitgedroogd'],
+};
+const PRODUCT_ALIASES = {
+  p001: ['paracetamol'], p002: ['ibuprofen', 'ibu'], p003: ['vitamine d', 'vitamine d3', 'vit d'],
+  p004: ['vitamine c', 'vit c'], p005: ['multivitamine', 'multivitamines'], p006: ['neusspray', 'xylometazoline'],
+  p007: ['keelpastilles', 'pastilles', 'keeltabletten'], p008: ['hoestdrank', 'hoestsiroop'], p009: ['melatonine'],
+  p010: ['nicotine kauwgom', 'kauwgom', 'nicotinekauwgom'], p011: ['aftersun', 'after sun'], p012: ['dagcreme', 'creme', 'gezichtscreme'],
+  p013: ['acne gel', 'acnegel', 'benzoylperoxide'], p014: ['pleisters', 'pleister'], p015: ['ors', 'rehydratie', 'rehydratiepoeder'],
+};
+const CATEGORY_WORDS = { 'vitamines': ['vitamines', 'vitamine', 'supplementen'], 'huidverzorging': ['huidverzorging', 'huid'], 'pijnstillers': ['pijnstiller', 'pijnstillers'], 'verkoudheid': ['verkoudheid'] };
+
+const EXAMPLES = [
+  'Mijn dochter van 8 heeft sinds gisteren keelpijn, we hebben nog niets geprobeerd',
+  'Ik ben zwanger en heb sinds vanochtend hoofdpijn',
+  'Ik slaap al maanden slecht, melatonine helpt niet',
+  'Kan ik een geopende dagcrème retourneren?',
+  'Is er een aanbieding op vitamines?',
+  'Heb je iets tegen een kater?',
+];
+
+/* ---------- helpers ---------- */
+const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+const norm = s => ' ' + String(s || '').toLowerCase().normalize('NFD').replace(/\p{M}/gu, '').replace(/[^a-z0-9 ]+/g, ' ').replace(/\s+/g, ' ').trim() + ' ';
+const has = (t, phrase) => new RegExp('\\b' + phrase.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + '\\b').test(t);
+const eur = n => '€ ' + n.toFixed(2).replace('.', ',');
+const fmtDate = iso => { const [y, m, d] = iso.split('-'); return `${d}-${m}-${y}`; };
+const timeLabel = () => { const d = new Date(); return 'Vandaag ' + String(d.getHours()).padStart(2, '0') + ':' + String(d.getMinutes()).padStart(2, '0'); };
+const icon = (id, cls = 'icon') => `<svg class="${cls}" aria-hidden="true"><use href="#${id}"/></svg>`;
+const uniq = a => [...new Set(a)];
+const cap = s => s ? s.charAt(0).toUpperCase() + s.slice(1) : s;
+const shortName = p => p.name.replace(/\s*\(.*?\)\s*$/, '').replace(/\b\d+([.,]\d+)?\s*(mg|ie|ml|%)\b/gi, '').replace(/\s+/g, ' ').trim();
+
+/* ---------- state ---------- */
+const state = {
+  view: 'ask', phase: 'input', mode: 'sim', apiKey: '',
+  question: '', ctx: null, gaps: [], result: null, history: [], liveNotice: '',
+};
+
+/* ---------- analysis: classify + extract ---------- */
+function matchSymptoms(t) {
+  const tags = [];
+  const entries = [];
+  for (const [tag, syns] of Object.entries(SYMPTOM_SYNONYMS)) for (const s of syns) entries.push([s, tag]);
+  entries.sort((a, b) => b[0].length - a[0].length);
+  let scan = t;
+  for (const [syn, tag] of entries) {
+    if (has(scan, syn)) { tags.push(tag); scan = scan.replace(new RegExp('\\b' + syn + '\\b', 'g'), ' '); }
+  }
+  // generic "pijn" only counts if nothing more specific matched
+  const specific = tags.filter(x => x !== 'pijn');
+  return specific.length ? uniq(specific) : uniq(tags);
+}
+function rawComplaint(t) {
+  const m = t.match(/\b(?:tegen|voor|bij|last van)\s+(?:een |de |het |mijn )?([a-z][a-z ]{2,40}?)(?=\s+(?:en|maar|sinds|al|omdat|want|hebben|heb|voor)\b|\s*$)/);
+  if (!m) return '';
+  const phrase = m[1].trim();
+  if (/^(mijn|mij|me|hem|haar|kind|dochter|zoon|partner|iemand|klant)\b/.test(phrase)) return '';
+  return phrase;
+}
+function matchProducts(t) {
+  const hits = [];
+  for (const p of PRODUCTS) {
+    const aliases = [...(PRODUCT_ALIASES[p.id] || []), p.active_ingredient].filter(Boolean);
+    if (aliases.some(a => has(t, norm(a).trim()))) hits.push(p.id);
+  }
+  return hits;
+}
+function matchCategories(t) {
+  const out = [];
+  for (const [cat, words] of Object.entries(CATEGORY_WORDS)) if (words.some(w => has(t, w))) out.push(cat);
+  return out;
+}
+function detectWho(t) {
+  let who = null, age = null, bucket = null;
+  const ageM = t.match(/\b(\d{1,2})\s*(?:jaar|jr|jarig|jarige)\b/) || t.match(/\b(?:van|is|wordt)\s+(\d{1,2})\b/);
+  if (ageM) age = parseInt(ageM[1], 10);
+  if (/\b(dochter|zoon|zoontje|dochtertje|kind|kinderen|baby|peuter|kleuter|tiener|kleintje)\b/.test(t)) who = 'kind';
+  else if (/\b(partner|vrouw|man|vriend|vriendin|echtgenoot|echtgenote)\b/.test(t) && /\b(mijn|m n|me)\b/.test(t)) who = 'partner';
+  else if (/\b(moeder|vader|oma|opa|broer|zus|collega|buurvrouw|buurman|schoonmoeder|schoonvader)\b/.test(t)) who = 'ander';
+  else if (/\b(ik|mij|mezelf|mijzelf|zelf|m n)\b/.test(t)) who = 'mezelf';
+  if (/\bbaby\b/.test(t)) bucket = '0-5'; else if (/\b(peuter|kleuter)\b/.test(t)) bucket = '0-5'; else if (/\btiener\b/.test(t)) bucket = '12-17';
+  if (age !== null) { bucket = age < 6 ? '0-5' : age < 12 ? '6-11' : age < 18 ? '12-17' : 'volwassen'; if (who === null) who = age < 18 ? 'kind' : 'ander'; if (who === 'kind' && age >= 18) who = 'ander'; }
+  if (who && who !== 'kind') bucket = bucket || 'volwassen';
+  return { who, bucket };
+}
+function detectDuration(t) {
+  if (/\b(sinds|vanaf)\s+(vandaag|vanochtend|vanmorgen|vannacht|vanmiddag|net|zojuist)\b/.test(t) || /\b(vandaag|vanochtend|vanmorgen|vannacht|net begonnen)\b/.test(t)) return 'vandaag';
+  if (/\b(sinds|vanaf)?\s*(gisteren|gisteravond|eergisteren)\b/.test(t) || /\b(paar|enkele|twee|drie|2|3|4|5)\s+dag(en)?\b/.test(t) || /\bdag of (twee|drie|wat)\b/.test(t)) return 'een paar dagen';
+  const dm = t.match(/\b(\d+)\s*dag(en)?\b/); if (dm) { const n = +dm[1]; return n <= 1 ? 'vandaag' : n <= 6 ? 'een paar dagen' : n <= 13 ? 'een week of langer' : 'al langere tijd'; }
+  const wm = t.match(/\b(\d+|een|twee|drie|paar)\s*(week|weken)\b/); if (wm) { const n = { een: 1, twee: 2, drie: 3, paar: 2 }[wm[1]] ?? +wm[1]; return n >= 3 ? 'al langere tijd' : 'een week of langer'; }
+  if (/\b(maand|maanden|jaar|jaren|al lang|al heel lang|chronisch|altijd al|regelmatig|steeds weer|al tijden|al weken|maandenlang)\b/.test(t)) return 'al langere tijd';
+  if (/\b(een week|sinds een week|week)\b/.test(t)) return 'een week of langer';
+  return null;
+}
+function detectPrior(t) {
+  const failed = /\b(helpt niet|hielp niet|werkt niet|werkte niet|zonder effect|hielp niks|helpt niks|geen effect)\b/.test(t);
+  const tried = matchProducts(t).filter(id => PRODUCTS.find(p => p.id === id).active_ingredient);
+  const triedIngredient = tried.length ? PRODUCTS.find(p => p.id === tried[0]).active_ingredient : null;
+  if (/\b(op recept|van de (huis)?arts|van de dokter|voorgeschreven|antibiotica|medicijnen van)\b/.test(t)) return { prior: 'iets op recept', failed, triedIngredient };
+  if (/\b(nog )?(niets|niks|geen)\s+(geprobeerd|genomen|gebruikt|geslikt|gedaan)\b/.test(t) || /\bnog niets\b/.test(t) || /\bniets geprobeerd\b/.test(t)) return { prior: 'nog niets', failed: false, triedIngredient: null };
+  if (failed || /\b(al|eerder|net|gisteren)\s+([a-z]+\s+)?(geprobeerd|genomen|gebruikt|geslikt|gehad)\b/.test(t) || (triedIngredient && /\b(geprobeerd|genomen|gebruikt|geslikt|helpt|hielp)\b/.test(t))) return { prior: 'iets zonder recept', failed, triedIngredient };
+  return { prior: null, failed: false, triedIngredient: null };
+}
+function classify(t, tags, productIds) {
+  const policyHit = POLICIES.filter(p => p.keywords.some(k => has(t, norm(k).trim())));
+  if (policyHit.some(p => p.category === 'returns' || p.category === 'data_privacy') || (policyHit.length && !tags.length && !/\b(tegen|last van|helpt bij)\b/.test(t))) return 'policy';
+  if (/\b(aanbieding|aanbiedingen|korting|actie|acties|promotie|sale|goedkoper|in de aanbieding|afgeprijsd)\b/.test(t)) return 'promo';
+  if (productIds.length && /\b(hebben jullie|heb je|verkopen jullie|verkoop je|hebben jullie|waar (staat|ligt|vind ik|is)|is er|voorraad|op voorraad|wat kost|hoeveel kost|prijs)\b/.test(t) && !tags.length) return 'lookup';
+  if (tags.length || /\b(tegen|last van|helpt bij|iets voor|klachten|klacht|zoek iets)\b/.test(t)) return 'symptom';
+  if (productIds.length) return 'lookup';
+  return 'unknown';
+}
+function analyze(question) {
+  const t = norm(question);
+  const tags = matchSymptoms(t);
+  const productIds = matchProducts(t);
+  const qtype = classify(t, tags, productIds);
+  const who = detectWho(t);
+  const pr = detectPrior(t);
+  const triage = {
+    intended_for: who.who, age_bucket: who.bucket,
+    pregnant: /\b(zwanger|zwangerschap|borstvoeding)\b/.test(t),
+    complaints: tags, complaint_raw: tags.length ? '' : rawComplaint(t),
+    duration: detectDuration(t), prior_remedies: pr.prior, prior_failed: pr.failed, tried_ingredient: pr.triedIngredient,
+    complete: false,
+  };
+  return { question, t, qtype, tags, productIds, categories: matchCategories(t), policyHits: POLICIES.filter(p => p.keywords.some(k => has(t, norm(k).trim()))), triage };
+}
+function computeGaps(ctx) {
+  if (ctx.qtype !== 'symptom') return [];
+  const tr = ctx.triage, gaps = [];
+  if (!tr.intended_for) gaps.push('intended_for');
+  if (tr.intended_for === 'kind' && !tr.age_bucket) gaps.push('age');
+  if (!tr.complaints.length && !tr.complaint_raw) gaps.push('complaints');
+  if (!tr.duration) gaps.push('duration');
+  if (!tr.prior_remedies) gaps.push('prior_remedies');
+  return gaps;
+}
+
+/* ---------- search + safety ---------- */
+function activePromos() { return PROMOTIONS.filter(p => new Date(p.start_date) <= TODAY && TODAY <= new Date(p.end_date + 'T23:59:59')); }
+function promoFor(pid) { return activePromos().find(p => p.product_ids.includes(pid)) || null; }
+function searchProducts(ctx) {
+  const tr = ctx.triage;
+  return PRODUCTS.map(p => {
+    let score = 0;
+    for (const tag of tr.complaints) if (p.symptoms.includes(tag)) score += 3;
+    if (ctx.productIds.includes(p.id)) score += 4;
+    if (ctx.categories.some(c => norm(p.category).includes(c))) score += 1;
+    if (score > 0 && promoFor(p.id)) score += 0.5;
+    return { p, score };
+  }).filter(x => x.score > 0).sort((a, b) => b.score - a.score || a.p.price_eur - b.p.price_eur).map(x => x.p);
+}
+function effectiveAge(tr) { return tr.intended_for === 'kind' ? ({ '0-5': 0, '6-11': 6, '12-17': 12 }[tr.age_bucket] ?? 0) : 18; }
+function whoLabel(tr) {
+  if (!tr.intended_for) return 'Niet vermeld';
+  if (tr.intended_for === 'kind') return 'Kind' + (tr.age_bucket ? ` (${tr.age_bucket} jaar)` : '');
+  return { mezelf: 'De klant zelf', partner: 'Partner van de klant', ander: 'Iemand anders (volwassene)' }[tr.intended_for];
+}
+function applySafety(candidates, ctx) {
+  const tr = ctx.triage, age = effectiveAge(tr), allowed = [], blocked = [], checks = [];
+  for (const p of candidates) {
+    const reasons = [], flags = [];
+    if (p.min_age > age) reasons.push(`niet geschikt onder de ${p.min_age} jaar`);
+    if (p.age_restriction && age < p.age_restriction) reasons.push(`verkoop alleen ${p.age_restriction}+, legitimatie vereist`);
+    if (tr.pregnant && p.pregnancy_safe === false) reasons.push('niet geschikt bij zwangerschap of borstvoeding');
+    if (tr.pregnant && p.pregnancy_safe === null) flags.push('bij zwangerschap eerst overleggen met de apotheker');
+    if (tr.tried_ingredient && p.active_ingredient === tr.tried_ingredient && tr.prior_failed) reasons.push(`${p.active_ingredient} is al geprobeerd zonder effect`);
+    if (reasons.length) blocked.push({ p, reason: reasons.join('; ') });
+    else allowed.push({ p, flags });
+  }
+  // de-prioritise flagged items, keep order otherwise
+  allowed.sort((a, b) => a.flags.length - b.flags.length);
+  checks.push({ ok: true, text: `Leeftijd: ${whoLabel(tr)}${tr.intended_for === 'kind' ? ', producten onder de minimumleeftijd uitgesloten' : ''}` });
+  if (tr.pregnant) checks.push({ ok: true, text: 'Zwangerschap of borstvoeding vermeld: onveilige producten uitgesloten' });
+  else if (tr.intended_for !== 'kind' && allowed.some(a => a.p.pregnancy_safe !== true)) checks.push({ warn: true, text: 'Zwangerschap of borstvoeding: niet vermeld, vraag na voordat je dit meegeeft' });
+  if (tr.tried_ingredient) checks.push({ ok: true, text: `Eerder ${tr.tried_ingredient} geprobeerd${tr.prior_failed ? ' zonder effect: ander werkzaam bestanddeel gezocht' : ''}` });
+  return { allowed, blocked, checks };
+}
+function decideEscalation(ctx, allowed) {
+  const tr = ctx.triage, tags = tr.complaints;
+  const childUnder6 = tr.intended_for === 'kind' && tr.age_bucket === '0-5';
+  if (childUnder6 && tags.some(x => ['koorts', 'diarree', 'braken', 'uitdroging'].includes(x))) return { level: 'urgent', reason: 'Kind onder de 6 jaar met koorts, diarree of braken: vandaag nog contact met de huisarts.' };
+  if (tags.includes('koorts') && ['een week of langer', 'al langere tijd'].includes(tr.duration)) return { level: 'doctor', reason: 'Koorts die langer dan een week aanhoudt hoort bij de huisarts, niet bij de drogist.' };
+  if (tr.duration === 'al langere tijd') return { level: 'doctor', reason: 'Klachten die al langere tijd aanhouden: adviseer een afspraak bij de huisarts. Een product kan hooguit tijdelijk verlichten.' };
+  if (tr.prior_remedies === 'iets op recept') return { level: 'pharmacist', reason: 'De klant gebruikt al medicatie op recept: laat de apotheker meekijken op wisselwerkingen voordat je iets aanbeveelt.' };
+  if (tr.prior_failed && !allowed.some(a => !a.flags.length)) return { level: 'doctor', reason: 'Het eerder geprobeerde middel hielp niet en er is geen geschikt alternatief: verwijs naar de huisarts.' };
+  if (tr.prior_failed) return { level: 'pharmacist', reason: 'Het eerder geprobeerde middel hielp niet. Een alternatief met een ander werkzaam bestanddeel is mogelijk; laat bij twijfel de apotheker meekijken.' };
+  if (['een week of langer'].includes(tr.duration) && tags.some(x => ['hoest', 'diarree', 'braken', 'verstopte neus'].includes(x))) return { level: 'doctor', reason: 'Deze klacht duurt al een week of langer: adviseer de huisarts als het niet snel verbetert.' };
+  if (tr.pregnant && !allowed.some(a => !a.flags.length)) return { level: 'pharmacist', reason: 'Zwangerschap vermeld en alleen producten met een overlegadvies: laat de apotheker meekijken.' };
+  return { level: 'none', reason: '' };
+}
+
+/* ---------- resolve into a QueryResult ---------- */
+function complaintLabel(tr) { return tr.complaints.length ? tr.complaints.join(', ') : (tr.complaint_raw || 'de klacht'); }
+function priceLine(p) {
+  const promo = promoFor(p.id);
+  if (promo && promo.type === 'percent_off') return { now: p.price_eur * (1 - promo.discount_percent / 100), was: p.price_eur, promo };
+  return { now: p.price_eur, was: null, promo };
+}
+function resolve(ctx) {
+  const tr = ctx.triage;
+  const base = { question: ctx.question, qtype: ctx.qtype, triage: tr, recommended: null, alternatives: [], blocked: [], checks: [], promos: [], policies: [], escalation: { level: 'none', reason: '' }, sources: [], timestamp: timeLabel(), mode: state.mode };
+  if (ctx.qtype === 'policy') {
+    const pols = ctx.policyHits.length ? ctx.policyHits : POLICIES.filter(p => p.category === 'medical_disclaimer');
+    return { ...base, policies: pols, sources: pols.map(p => p.id) };
+  }
+  if (ctx.qtype === 'promo') {
+    let promos = activePromos();
+    if (ctx.productIds.length) promos = promos.filter(pr => pr.product_ids.some(id => ctx.productIds.includes(id)));
+    else if (ctx.categories.length) promos = promos.filter(pr => pr.product_ids.some(id => ctx.categories.some(c => norm(PRODUCTS.find(p => p.id === id).category).includes(c))));
+    return { ...base, promos, sources: promos.map(p => p.id) };
+  }
+  if (ctx.qtype === 'lookup') {
+    const prods = ctx.productIds.map(id => PRODUCTS.find(p => p.id === id));
+    const rec = prods[0] || null;
+    return { ...base, recommended: rec, alternatives: prods.slice(1).map(p => ({ p, why: 'ook gevonden' })), promos: prods.map(p => promoFor(p.id)).filter(Boolean), policies: rec && rec.age_restriction ? POLICIES.filter(p => p.category === 'age_restriction') : [], sources: [...prods.map(p => p.id), ...prods.map(p => promoFor(p.id)).filter(Boolean).map(p => p.id)] };
+  }
+  if (ctx.qtype === 'unknown') return { ...base, sources: [] };
+  // symptom
+  const candidates = searchProducts(ctx);
+  const { allowed, blocked, checks } = applySafety(candidates, ctx);
+  const escalation = decideEscalation(ctx, allowed);
+  const rec = allowed[0] ? allowed[0].p : null;
+  const alternatives = allowed.slice(1, 3).map(a => ({ p: a.p, why: a.flags.length ? a.flags.join('; ') : (a.p.active_ingredient && rec && rec.active_ingredient && a.p.active_ingredient !== rec.active_ingredient ? `ander werkzaam bestanddeel (${a.p.active_ingredient})` : 'ook passend') }));
+  const recFlags = allowed[0] ? allowed[0].flags : [];
+  const policies = POLICIES.filter(p => (p.category === 'medical_disclaimer' && (escalation.level !== 'none' || (rec && rec.disclaimer))) || (p.category === 'age_restriction' && (blocked.some(b => b.p.age_restriction) || (rec && rec.age_restriction))));
+  const promos = rec && promoFor(rec.id) ? [promoFor(rec.id)] : [];
+  return { ...base, recommended: rec, recFlags, alternatives, blocked, checks, escalation, policies, promos, noMatch: candidates.length === 0, sources: [rec && rec.id, ...alternatives.map(a => a.p.id), ...blocked.map(b => b.p.id), ...promos.map(p => p.id), ...policies.map(p => p.id)].filter(Boolean) };
+}
+
+/* ---------- simulated composition (Dutch templates) ---------- */
+function composeSim(r) {
+  const tr = r.triage, who = tr.intended_for === 'mezelf' ? 'u' : tr.intended_for === 'kind' ? 'uw kind' : tr.intended_for ? 'de persoon' : 'u';
+  if (r.qtype === 'policy') {
+    const emp = r.policies.map(p => `${p.title}: ${p.description} (bron ${p.id})`).join(' ');
+    const cus = r.policies.map(p => p.customer_text).join(' ');
+    return { employee_answer: emp, customer_answer: cus };
+  }
+  if (r.qtype === 'promo') {
+    if (!r.promos.length) return { employee_answer: 'Er loopt op dit moment geen actie op wat de klant noemt. Zeg dat eerlijk en noem geen verzonnen korting.', customer_answer: 'Daar loopt op dit moment geen actie op. Zodra er een aanbieding is, zie je dat bij het product in de winkel.' };
+    const emp = 'Actieve acties: ' + r.promos.map(pr => `${pr.title} (${pr.product_ids.map(id => PRODUCTS.find(p => p.id === id).name).join(', ')}, t/m ${fmtDate(pr.end_date)}, bron ${pr.id})`).join('; ') + '.';
+    const cus = r.promos.map(pr => `${pr.title}, geldig t/m ${fmtDate(pr.end_date)}.`).join(' ');
+    return { employee_answer: emp, customer_answer: cus };
+  }
+  if (r.qtype === 'lookup') {
+    if (!r.recommended) return { employee_answer: 'Dat product staat niet in ons assortiment.', customer_answer: 'Dat hebben we helaas niet in het assortiment.' };
+    const p = r.recommended, pl = priceLine(p);
+    const promoTxt = pl.promo ? ` Actie: ${pl.promo.title}, t/m ${fmtDate(pl.promo.end_date)}.` : '';
+    const emp = `Ja, ${p.name} is in het assortiment (${eur(p.price_eur)}, ${p.category}, bron ${p.id}).${promoTxt}${p.age_restriction ? ` Let op: verkoop alleen ${p.age_restriction}+, vraag bij twijfel om legitimatie.` : ''}`;
+    const cus = `Ja, ${shortName(p)} hebben we, voor ${eur(pl.now)}.${promoTxt}${p.age_restriction ? ` Dit product is alleen voor ${p.age_restriction} jaar en ouder.` : ''}`;
+    return { employee_answer: emp, customer_answer: cus };
+  }
+  if (r.qtype === 'unknown') return { employee_answer: 'Ik heb hier geen informatie over in de product-, actie- of beleidsdata. Vraag de klant om de vraag anders te formuleren, of verwijs naar een collega.', customer_answer: 'Daar kan ik u helaas niet direct mee helpen. Een collega denkt graag met u mee.' };
+  // symptom
+  const esc_ = r.escalation, cl = complaintLabel(tr);
+  const lead = { urgent: `Verwijs vandaag nog naar de huisarts. ${esc_.reason}`, doctor: `Adviseer de huisarts. ${esc_.reason}`, pharmacist: `Laat de apotheker meekijken. ${esc_.reason}`, none: '' }[esc_.level];
+  const leadCus = { urgent: 'Dit hoort vandaag nog bij de huisarts, ga daar eerst langs.', doctor: 'Omdat de klachten al langer aanhouden, raden we aan een afspraak bij de huisarts te maken.', pharmacist: 'Onze apotheker kijkt hier even met u mee voordat u iets meeneemt.', none: '' }[esc_.level];
+  if (r.noMatch) return {
+    employee_answer: `${lead ? lead + ' ' : ''}Voor "${cl}" staat geen passend product in het assortiment. Zeg dat eerlijk in plaats van iets vergelijkbaars aan te praten; verwijs naar de apotheker.`,
+    customer_answer: `${leadCus ? leadCus + ' ' : ''}Voor ${cl} hebben we helaas geen passend product. De apotheker kan met u meedenken.`,
+  };
+  if (!r.recommended) return {
+    employee_answer: `${lead ? lead + ' ' : ''}Geen geschikt product voor ${whoLabel(tr).toLowerCase()}: ${r.blocked.map(b => `${b.p.name} (${b.reason})`).join('; ')}. Verkoop niets zonder advies van de apotheker of huisarts.`,
+    customer_answer: `${leadCus ? leadCus + ' ' : ''}Voor ${who} hebben we hier geen geschikt product zonder advies. ${r.blocked.length ? `De gebruikelijke middelen zijn ${r.blocked.length > 1 ? 'in dit geval niet geschikt' : 'in dit geval niet geschikt'}.` : ''}`.trim(),
+  };
+  const p = r.recommended, pl = priceLine(p);
+  const promoTxt = pl.promo ? (pl.promo.type === 'percent_off' ? ` Nu ${pl.promo.discount_percent}% korting: ${eur(pl.now)} in plaats van ${eur(p.price_eur)}, t/m ${fmtDate(pl.promo.end_date)}.` : ` Actie: ${pl.promo.title}, t/m ${fmtDate(pl.promo.end_date)}.`) : '';
+  const altTxt = r.alternatives.length ? ` Alternatief: ${r.alternatives.map(a => `${a.p.name} (${a.why})`).join('; ')}.` : '';
+  const blockTxt = r.blocked.length ? ` Niet aanbevelen: ${r.blocked.map(b => `${b.p.name} (${b.reason})`).join('; ')}.` : '';
+  const flagTxt = r.recFlags && r.recFlags.length ? ` Let op: ${r.recFlags.join('; ')}.` : '';
+  const timing = esc_.level === 'doctor' ? ' Als tijdelijke verlichting in de tussentijd:' : '';
+  const emp = `${lead ? lead : ''}${timing} ${p.name} (${eur(p.price_eur)}, bron ${p.id}) past bij ${cl} voor ${whoLabel(tr).toLowerCase()}. Gebruik: ${p.usage}.${promoTxt}${flagTxt}${p.disclaimer ? ` Vermeld: ${p.disclaimer}` : ''}${altTxt}${blockTxt}`.replace(/\s+/g, ' ').trim();
+  const cus = `${leadCus ? leadCus + ' ' : ''}${esc_.level === 'doctor' ? 'Voor nu kan ' : ''}${shortName(p)} ${esc_.level === 'doctor' ? 'de klachten verlichten' : `kan helpen bij ${cl}`}. ${p.usage}.${promoTxt}${p.disclaimer ? ` ${p.disclaimer}` : ''}`.replace(/\s+/g, ' ').trim();
+  return { employee_answer: emp, customer_answer: cus };
+}
+
+/* ---------- live composition via Claude (presenter's own key) ---------- */
+const LIVE_SYSTEM = `You write answers for a Dutch drugstore employee assistant. You receive a JSON context produced by the store's own rules engine. Rules:
+- Write in Dutch. Output JSON with exactly two fields: employee_answer and customer_answer.
+- Only mention products in context.recommended and context.alternatives. Never mention or suggest products outside the context, and never recommend anything listed under context.blocked (you may say why it was excluded).
+- If context.escalation.level is "urgent" or "doctor", the FIRST sentence of both answers must be the referral. If "pharmacist", say the pharmacist should look along before selling.
+- employee_answer: 3-6 sentences, factual, for the employee. Include the product id in parentheses, the usage line, active promotion with end date, every disclaimer verbatim, the excluded products with reasons, and alternatives.
+- customer_answer: 2-4 warm, plain sentences for the customer. No ids, no internal reasoning, no words like "bron" or "triage". Include price, promotion if any, and the disclaimer in plain words.
+- If context.noMatch is true, say honestly that nothing suitable is in the assortment and point to the pharmacist. Do not invent products.`;
+async function composeLive(r) {
+  const p = r.recommended;
+  const ctxOut = {
+    question: r.question, question_type: r.qtype,
+    triage: { intended_for: whoLabel(r.triage), pregnant_or_nursing: r.triage.pregnant, complaints: r.triage.complaints.length ? r.triage.complaints : [r.triage.complaint_raw], duration: r.triage.duration, prior_remedies: r.triage.prior_remedies, prior_failed: r.triage.prior_failed },
+    recommended: p ? { id: p.id, name: p.name, price_eur: p.price_eur, promo_price_eur: priceLine(p).was ? +priceLine(p).now.toFixed(2) : null, usage: p.usage, disclaimer: p.disclaimer, min_age: p.min_age, notes: r.recFlags || [] } : null,
+    alternatives: r.alternatives.map(a => ({ id: a.p.id, name: a.p.name, price_eur: a.p.price_eur, why: a.why })),
+    blocked: r.blocked.map(b => ({ id: b.p.id, name: b.p.name, reason: b.reason })),
+    promotions: r.promos.map(pr => ({ id: pr.id, title: pr.title, type: pr.type, discount_percent: pr.discount_percent, end_date: pr.end_date, products: pr.product_ids.map(id => PRODUCTS.find(x => x.id === id).name) })),
+    policies: r.policies.map(pl => ({ id: pl.id, title: pl.title, text: pl.description, customer_text: pl.customer_text })),
+    escalation: r.escalation, noMatch: !!r.noMatch,
+  };
+  const res = await fetch('https://api.anthropic.com/v1/messages', {
+    method: 'POST',
+    headers: { 'content-type': 'application/json', 'x-api-key': state.apiKey, 'anthropic-version': '2023-06-01', 'anthropic-dangerous-direct-browser-access': 'true', 'anthropic-beta': 'server-side-fallback-2026-07-01' },
+    body: JSON.stringify({
+      model: 'claude-opus-5', max_tokens: 2048, fallbacks: 'default', system: LIVE_SYSTEM,
+      messages: [{ role: 'user', content: JSON.stringify(ctxOut) }],
+      output_config: { effort: 'low', format: { type: 'json_schema', schema: { type: 'object', properties: { employee_answer: { type: 'string' }, customer_answer: { type: 'string' } }, required: ['employee_answer', 'customer_answer'], additionalProperties: false } } },
+    }),
+  });
+  if (!res.ok) { let msg = `HTTP ${res.status}`; try { msg += ': ' + ((await res.json()).error || {}).message; } catch (e) { /* no body */ } throw new Error(msg); }
+  const data = await res.json();
+  if (data.stop_reason === 'refusal') throw new Error('Claude weigerde dit verzoek (refusal)');
+  const text = (data.content || []).filter(b => b.type === 'text').map(b => b.text).join('');
+  return JSON.parse(text);
+}
+
+/* ---------- flow ---------- */
+function startQuestion(q) {
+  state.question = q; state.ctx = analyze(q); state.liveNotice = '';
+  state.gaps = computeGaps(state.ctx);
+  // if the complaint is known but matches nothing, answer honestly right away instead of asking more
+  if (state.ctx.qtype === 'symptom' && (state.ctx.triage.complaints.length || state.ctx.triage.complaint_raw) && searchProducts(state.ctx).length === 0) state.gaps = [];
+  if (state.gaps.length) { state.phase = 'triage'; render(); } else finish();
+}
+function answerGap(field, value) {
+  const tr = state.ctx.triage;
+  if (field === 'intended_for') { tr.intended_for = value; if (value !== 'kind') tr.age_bucket = 'volwassen'; }
+  if (field === 'age') tr.age_bucket = value;
+  if (field === 'duration') tr.duration = value;
+  if (field === 'prior_remedies') tr.prior_remedies = value;
+  if (field === 'complaints') {
+    const t = norm(value); const tags = matchSymptoms(t);
+    tr.complaints = tags; tr.complaint_raw = tags.length ? '' : value.trim();
+    const dur = detectDuration(t); if (dur && !tr.duration) tr.duration = dur;
+    if (searchProducts(state.ctx).length === 0) { state.gaps = []; finish(); return; }
+  }
+  state.gaps = computeGaps(state.ctx);
+  if (state.gaps.length) render(); else finish();
+}
+async function finish() {
+  state.ctx.triage.complete = true;
+  state.phase = 'thinking'; render();
+  const r = resolve(state.ctx);
+  let text;
+  if (state.mode === 'live' && state.apiKey) {
+    try { text = await composeLive(r); r.mode = 'live'; }
+    catch (e) { state.liveNotice = 'Live modus mislukt (' + e.message + '). Hieronder het gesimuleerde antwoord.'; text = composeSim(r); r.mode = 'sim'; }
+  } else {
+    await new Promise(res => setTimeout(res, 900));
+    text = composeSim(r); r.mode = 'sim';
+  }
+  Object.assign(r, text);
+  state.result = r; state.history.unshift(r);
+  state.phase = 'answered'; state.view = 'employee'; render();
+}
+function reset() { state.phase = 'input'; state.question = ''; state.ctx = null; state.gaps = []; state.liveNotice = ''; state.view = 'ask'; render(); setTimeout(() => { const ta = document.getElementById('q'); if (ta) ta.focus(); }, 0); }
+
+/* ---------- rendering ---------- */
+const GAP_UI = {
+  intended_for: { title: 'Voor wie is het product bedoeld?', chips: [['De klant zelf', 'mezelf'], ['Partner', 'partner'], ['Kind', 'kind'], ['Iemand anders (volwassene)', 'ander']] },
+  age: { title: 'Hoe oud is het kind?', chips: [['0 tot 5 jaar', '0-5'], ['6 tot 11 jaar', '6-11'], ['12 tot 17 jaar', '12-17']] },
+  complaints: { title: 'Wat zijn de klachten?', chips: [['Hoofdpijn', 'hoofdpijn'], ['Keelpijn', 'keelpijn'], ['Verkoudheid', 'verkoudheid'], ['Hoest', 'hoest'], ['Koorts', 'koorts'], ['Slaapproblemen', 'slaapproblemen'], ['Spierpijn', 'spierpijn'], ['Huidirritatie', 'huidirritatie']], free: true },
+  duration: { title: 'Sinds wanneer?', chips: [['Vandaag', 'vandaag'], ['Een paar dagen', 'een paar dagen'], ['Een week of langer', 'een week of langer'], ['Al langere tijd', 'al langere tijd']] },
+  prior_remedies: { title: 'Is er al iets geprobeerd?', chips: [['Nog niets', 'nog niets'], ['Iets zonder recept', 'iets zonder recept'], ['Iets op recept', 'iets op recept'], ['Weet niet', 'weet niet']] },
+};
+function foundTags(tr) {
+  const items = [
+    ['Voor wie', tr.intended_for ? whoLabel(tr) : null],
+    ['Klacht', tr.complaints.length ? tr.complaints.join(', ') : (tr.complaint_raw || null)],
+    ['Sinds', tr.duration],
+    ['Geprobeerd', tr.prior_remedies ? (tr.prior_remedies + (tr.tried_ingredient ? ` (${tr.tried_ingredient}${tr.prior_failed ? ', hielp niet' : ''})` : '')) : null],
+  ];
+  if (tr.pregnant) items.push(['Zwanger / borstvoeding', 'ja']);
+  return items.map(([k, v]) => v ? `<span class="tag on">${icon('i-check', 'icon sm')}${esc(k)}: ${esc(cap(v))}</span>` : `<span class="tag ask">${esc(k)}: nog vragen</span>`).join('');
+}
+function renderSidebar() {
+  const items = [['ask', 'i-chat', 'Vraag'], ['employee', 'i-clip', 'Medewerker'], ['customer', 'i-user', 'Klant'], ['history', 'i-clock', 'Geschiedenis']];
+  document.getElementById('sidebar').innerHTML = items.map(([v, ic, label]) => `<button class="nav ${state.view === v ? 'active' : ''}" data-view="${v}" aria-current="${state.view === v ? 'page' : 'false'}">${icon(ic)}<span class="txt">${label}</span>${v === 'history' && state.history.length ? `<span class="badge">${state.history.length}</span>` : ''}</button>`).join('')
+    + `<div class="spacer"></div><button class="btn-primary" data-action="new">${icon('i-chat', 'icon sm')}<span>Nieuwe vraag</span></button>
+       <div class="demo-note">Demo. Zoeken, veiligheidsregels en acties draaien lokaal in deze pagina. Antwoordtekst: ${state.mode === 'live' ? 'Claude (live)' : 'gesimuleerd'}.</div>`;
+  const pill = document.getElementById('modePill'); pill.classList.toggle('live', state.mode === 'live');
+  document.getElementById('modeLabel').textContent = state.mode === 'live' ? 'Live Claude' : 'Gesimuleerd';
+}
+function renderAsk() {
+  if (state.phase === 'input') return `
+    <div class="view-head"><div><h1>Nieuwe vraag</h1><p class="muted">Typ wat de klant vraagt, in gewone taal. De assistent leest eruit wat hij al weet en vraagt alleen door wat nog ontbreekt.</p></div></div>
+    <div class="card lift">
+      <label class="sr" for="q">Vraag</label>
+      <textarea id="q" class="textarea" placeholder="bv. Mijn zoon van 8 heeft sinds gisteren keelpijn, we hebben nog niets geprobeerd">${esc(state.question)}</textarea>
+      <div class="row" style="margin-top:12px; justify-content:space-between">
+        <span class="muted small">Enter verstuurt, Shift+Enter voor een nieuwe regel</span>
+        <button class="btn-primary" data-action="send">${icon('i-send', 'icon sm')}Verstuur</button>
+      </div>
+    </div>
+    <div class="card" style="margin-top:16px">
+      <div class="label" style="margin-bottom:10px">Probeer een voorbeeld</div>
+      <div class="chips">${EXAMPLES.map(e => `<button class="chip example" data-example="${esc(e)}">${esc(e)}</button>`).join('')}</div>
+    </div>
+    ${state.result ? `<div class="card" style="margin-top:16px"><div class="row" style="justify-content:space-between"><div><div class="label">Laatste antwoord</div><div style="margin-top:4px">${esc(state.result.question)}</div></div><button class="btn-outline" data-view="employee">Bekijk</button></div></div>` : ''}`;
+  const tr = state.ctx.triage;
+  const head = `<div class="view-head"><div><h1>Vraag</h1><p class="muted">Herkend uit de vraag, en wat nog ontbreekt.</p></div><button class="btn-ghost" data-action="new">${icon('i-x', 'icon sm')}Annuleren</button></div>
+    <div class="card"><div class="quote">&ldquo;${esc(state.question)}&rdquo;</div><div class="found">${foundTags(tr)}</div></div>`;
+  if (state.phase === 'thinking') return head + `<div class="card lift" style="margin-top:16px"><div class="row"><div class="spin"></div><div><div style="font-weight:500">${state.mode === 'live' && state.apiKey ? 'Claude schrijft het antwoord' : 'Zoeken in het assortiment en de veiligheidsregels toepassen'}</div><div class="muted small">Dit duurt een paar seconden.</div></div></div></div>`;
+  if (state.phase === 'triage') {
+    const field = state.gaps[0], ui = GAP_UI[field], n = Object.keys(GAP_UI).indexOf(field);
+    return head + `<div class="card lift" style="margin-top:16px">
+      <div class="label" style="color:var(--accent); margin-bottom:8px">Nog even nodig, ${state.gaps.length} ${state.gaps.length === 1 ? 'vraag' : 'vragen'}</div>
+      <h2>${esc(ui.title)}</h2>
+      <div class="chip-grid" style="margin-top:16px">${ui.chips.map(([l, v]) => `<button class="chip" data-gap="${field}" data-value="${esc(v)}">${esc(l)}</button>`).join('')}</div>
+      ${ui.free ? `<div class="row" style="margin-top:12px"><label class="sr" for="free">Of typ de klacht</label><input id="free" class="input" placeholder="Of typ de klacht zelf, bv. hooikoorts"><button class="btn-outline" data-action="free" data-gap="${field}">Doorgaan</button></div>` : ''}
+    </div>`;
+  }
+  return head + `<div class="card" style="margin-top:16px"><div class="row" style="justify-content:space-between"><div style="font-weight:500">Antwoord staat klaar.</div><div class="row"><button class="btn-primary" data-view="employee">Medewerker</button><button class="btn-outline" data-view="customer">Klant</button></div></div></div>`;
+}
+function escalationBanner(r) {
+  if (!r.escalation || r.escalation.level === 'none') return '';
+  const t = { urgent: 'Vandaag nog naar de huisarts', doctor: 'Adviseer de huisarts', pharmacist: 'Apotheker laten meekijken' }[r.escalation.level];
+  return `<div class="banner ${r.escalation.level}">${icon('i-stetho')}<div><strong>${t}.</strong> ${esc(r.escalation.reason)}</div></div>`;
+}
+function productCard(p, opts = {}) {
+  const pl = priceLine(p);
+  return `<div class="product"><div><div class="name">${esc(p.name)}</div><div class="muted small">${esc(p.category)}${p.active_ingredient ? ' · ' + esc(p.active_ingredient) : ''}${opts.showId ? ` · <span class="src" style="margin:0">${p.id}</span>` : ''}</div></div><div class="price">${pl.was ? `<s>${eur(pl.was)}</s>` : ''}${eur(pl.now)}</div></div>
+    <div class="usage">${esc(p.usage)}</div>
+    ${pl.promo ? `<div class="note promo">${icon('i-tag')}<span>${esc(pl.promo.title)}, geldig t/m ${fmtDate(pl.promo.end_date)}${opts.showId ? ` <span class="src" style="margin:0 0 0 6px">${pl.promo.id}</span>` : ''}</span></div>` : ''}
+    ${opts.flags && opts.flags.length ? `<div class="note consult">${icon('i-alert')}<span>${esc(cap(opts.flags.join('; ')))}</span></div>` : ''}
+    ${p.disclaimer ? `<div class="note caution">${icon('i-alert')}<span>${p.age_restriction ? `Alleen ${p.age_restriction}+. ` : ''}${esc(p.disclaimer)}</span></div>` : (p.age_restriction ? `<div class="note caution">${icon('i-alert')}<span>Alleen ${p.age_restriction}+, legitimatie bij twijfel.</span></div>` : '')}`;
+}
+function renderEmployee() {
+  const r = state.result;
+  const head = `<div class="view-head"><div><h1>Medewerker</h1><p class="muted">Volledig antwoord met redenering, veiligheidscontroles en bronnen.</p></div>${r ? `<button class="btn-outline" data-action="present">${icon('i-expand', 'icon sm')}Toon aan klant</button>` : ''}</div>`;
+  if (!r) return head + `<div class="card"><h2>Nog geen antwoord</h2><p class="muted" style="margin-top:6px">Stel een vraag, of open een eerdere vraag uit de geschiedenis.</p><div class="row" style="margin-top:16px"><button class="btn-primary" data-action="new">Nieuwe vraag</button><button class="btn-outline" data-view="history">Geschiedenis</button></div></div>`;
+  const tr = r.triage;
+  let out = head;
+  if (state.liveNotice) out += `<div class="banner info">${icon('i-alert')}<div>${esc(state.liveNotice)}</div></div>`;
+  out += escalationBanner(r);
+  out += `<div class="card lift"><div class="label" style="margin-bottom:8px">Antwoord ${r.mode === 'live' ? '· geschreven door Claude' : '· gesimuleerd'}</div><p class="answer">${esc(r.employee_answer)}</p></div>`;
+  if (r.qtype === 'symptom') {
+    out += `<div class="grid">
+      <div class="card"><div class="label" style="margin-bottom:8px">${icon('i-clip', 'icon sm')} Triage</div>
+        <div class="kv"><span class="k">Voor wie</span><span class="v">${esc(whoLabel(tr))}</span></div>
+        <div class="kv"><span class="k">Klacht</span><span class="v">${esc(cap(complaintLabel(tr)))}</span></div>
+        <div class="kv"><span class="k">Sinds</span><span class="v">${esc(cap(tr.duration || '?'))}</span></div>
+        <div class="kv"><span class="k">Geprobeerd</span><span class="v">${esc(cap(tr.prior_remedies || '?'))}${tr.tried_ingredient ? ` (${esc(tr.tried_ingredient)}${tr.prior_failed ? ', hielp niet' : ''})` : ''}</span></div>
+        ${tr.pregnant ? `<div class="kv"><span class="k">Zwanger / borstvoeding</span><span class="v">Ja</span></div>` : ''}
+      </div>
+      <div class="card"><div class="label" style="margin-bottom:8px">${icon('i-shield', 'icon sm')} Veiligheidscontroles</div>
+        ${r.checks.map(c => `<div class="check ${c.ok ? 'ok' : c.warn ? 'warn' : 'bad'}">${icon(c.ok ? 'i-check' : 'i-alert')}<span class="t">${esc(c.text)}</span></div>`).join('')}
+        ${r.blocked.map(b => `<div class="check bad">${icon('i-x')}<span class="t">${esc(b.p.name)}: ${esc(b.reason)}</span></div>`).join('')}
+      </div></div>`;
+    if (r.recommended) out += `<div class="card"><div class="label" style="margin-bottom:10px">Aanbeveling</div>${productCard(r.recommended, { showId: true, flags: r.recFlags })}</div>`;
+    if (r.alternatives.length) out += `<div class="card"><div class="label" style="margin-bottom:6px">Alternatieven</div>${r.alternatives.map(a => `<div class="alt"><div><div style="font-weight:500">${esc(a.p.name)} <span class="src" style="margin:0 0 0 6px">${a.p.id}</span></div><div class="why">${esc(cap(a.why))}</div></div><div class="price" style="font-family:var(--display); font-weight:600">${eur(priceLine(a.p).now)}</div></div>`).join('')}</div>`;
+  }
+  if (r.qtype === 'lookup' && r.recommended) out += `<div class="card"><div class="label" style="margin-bottom:10px">Product</div>${productCard(r.recommended, { showId: true })}</div>`;
+  if (r.qtype === 'promo' && r.promos.length) out += `<div class="card"><div class="label" style="margin-bottom:6px">Actieve acties</div>${r.promos.map(pr => `<div class="alt"><div><div style="font-weight:500">${esc(pr.title)} <span class="src" style="margin:0 0 0 6px">${pr.id}</span></div><div class="why">${pr.product_ids.map(id => esc(PRODUCTS.find(p => p.id === id).name)).join(', ')} · ${fmtDate(pr.start_date)} t/m ${fmtDate(pr.end_date)}</div></div></div>`).join('')}</div>`;
+  if (r.policies.length) out += `<div class="card"><div class="label" style="margin-bottom:6px">${icon('i-shield', 'icon sm')} Beleid</div>${r.policies.map(p => `<div class="alt"><div><div style="font-weight:500">${esc(p.title)} <span class="src" style="margin:0 0 0 6px">${p.id}</span></div><div class="why">${esc(p.description)}</div></div></div>`).join('')}</div>`;
+  out += `<div class="card"><div class="label" style="margin-bottom:10px">Bronnen</div>${r.sources.length ? uniq(r.sources).map(s => `<span class="src">${s}</span>`).join('') : '<span class="muted small">Geen records gebruikt</span>'}</div>`;
+  return out;
+}
+function customerBlock(r, big) {
+  const tr = r.triage;
+  if (r.qtype === 'symptom' && r.recommended) {
+    const p = r.recommended, pl = priceLine(p);
+    return `<div class="${big ? 'pname' : 'product'}">${big ? esc(p.name) : `<div><div class="name">${esc(p.name)}</div></div><div class="price">${pl.was ? `<s>${eur(pl.was)}</s>` : ''}${eur(pl.now)}</div>`}</div>
+      ${big ? `<div class="pprice">${pl.was ? `<s>${eur(pl.was)}</s>` : ''}${eur(pl.now)}</div>` : ''}
+      <p class="${big ? 'ptext' : 'answer'}" style="${big ? '' : 'margin-top:14px'}">${esc(r.customer_answer)}</p>
+      ${pl.promo ? `<div class="note promo">${icon('i-tag')}<span>${esc(pl.promo.title)}, t/m ${fmtDate(pl.promo.end_date)}</span></div>` : ''}
+      ${p.min_age > 0 || p.age_restriction ? `<div class="note caution">${icon('i-alert')}<span>Vanaf ${Math.max(p.min_age, p.age_restriction || 0)} jaar</span></div>` : ''}`;
+  }
+  const title = r.qtype === 'policy' ? (r.policies[0] ? r.policies[0].title : 'Beleid') : r.qtype === 'promo' ? 'Aanbiedingen' : r.qtype === 'lookup' && r.recommended ? r.recommended.name : cap(complaintLabel(tr));
+  return `<div class="${big ? 'pname' : 'name'}" style="${big ? '' : 'font-family:var(--display); font-size:18px; font-weight:600'}">${esc(title)}</div><p class="${big ? 'ptext' : 'answer'}" style="${big ? '' : 'margin-top:12px'}">${esc(r.customer_answer)}</p>`;
+}
+function renderCustomer() {
+  const r = state.result;
+  const head = `<div class="view-head"><div><h1>Klant</h1><p class="muted">Wat de klant te zien krijgt: kort, zonder interne informatie.</p></div>${r ? `<button class="btn-primary" data-action="present">${icon('i-expand', 'icon sm')}Volledig scherm</button>` : ''}</div>`;
+  if (!r) return head + `<div class="card"><h2>Nog geen antwoord</h2><p class="muted" style="margin-top:6px">Stel eerst een vraag.</p><div class="row" style="margin-top:16px"><button class="btn-primary" data-action="new">Nieuwe vraag</button></div></div>`;
+  return head + `<div class="card lift customer-card">${customerBlock(r, false)}</div>`;
+}
+function renderHistory() {
+  const counts = {};
+  for (const r of state.history) { const k = r.qtype === 'symptom' ? (r.recommended ? r.recommended.category : cap(complaintLabel(r.triage))) : { policy: 'Beleid', promo: 'Aanbiedingen', lookup: 'Product opzoeken', unknown: 'Onbekend' }[r.qtype]; counts[k] = (counts[k] || 0) + 1; }
+  const trending = Object.entries(counts).sort((a, b) => b[1] - a[1]).slice(0, 4);
+  return `<div class="view-head"><div><h1>Geschiedenis</h1><p class="muted">Vragen uit deze sessie. Klik om het antwoord opnieuw te openen.</p></div></div>
+    <div class="card">${state.history.length ? state.history.map((r, i) => `<button class="hist" data-hist="${i}"><div><div class="q">${esc(r.question)}</div><div class="m">${esc(r.timestamp)} · ${r.mode === 'live' ? 'Claude' : 'gesimuleerd'}${r.escalation && r.escalation.level !== 'none' ? ' · doorverwijzing' : ''}</div></div><div class="c">${esc(r.qtype === 'symptom' ? (r.recommended ? r.recommended.name : 'geen product') : { policy: 'beleid', promo: 'actie', lookup: 'product', unknown: 'onbekend' }[r.qtype])}</div></button>`).join('') : '<p class="muted">Nog geen vragen gesteld.</p>'}</div>
+    <div class="card"><div class="label" style="margin-bottom:10px">Meest gevraagd in deze sessie</div><div class="chips">${trending.length ? trending.map(([k, n]) => `<span class="trend"><b>${n}</b> ${esc(k)}</span>`).join('') : '<span class="muted small">Nog geen gegevens</span>'}</div></div>`;
+}
+function renderSettings() {
+  const pop = document.getElementById('pop');
+  if (pop.hidden) return;
+  pop.innerHTML = `<div class="card"><div class="row" style="justify-content:space-between"><h3>Instellingen</h3><button class="icon-btn" data-action="closeSettings" aria-label="Sluiten">${icon('i-x', 'icon sm')}</button></div>
+    <label class="radio"><input type="radio" name="mode" value="sim" ${state.mode === 'sim' ? 'checked' : ''}><div><div style="font-weight:500">Gesimuleerd</div><div class="d">Werkt overal, ook offline. De antwoordtekst komt uit vaste sjablonen.</div></div></label>
+    <label class="radio"><input type="radio" name="mode" value="live" ${state.mode === 'live' ? 'checked' : ''}><div><div style="font-weight:500">Live Claude</div><div class="d">Claude schrijft de twee antwoorden op basis van dezelfde lokale zoek- en veiligheidsuitkomst. Vereist een eigen Anthropic API-sleutel.</div></div></label>
+    <div style="margin-top:8px"><label class="label" for="key">API-sleutel</label><input id="key" class="input" type="password" autocomplete="off" placeholder="sk-ant-..." value="${esc(state.apiKey)}" style="width:100%; margin-top:6px"></div>
+    <p class="muted small" style="margin-top:10px">De sleutel blijft alleen in het geheugen van dit tabblad en wordt nergens opgeslagen of verstuurd behalve naar api.anthropic.com. Gebruik dit alleen op je eigen laptop; in het echte product blijft de sleutel op de server.</p>
+  </div>`;
+}
+function render() {
+  renderSidebar();
+  const v = document.getElementById('view');
+  v.innerHTML = state.view === 'ask' ? renderAsk() : state.view === 'employee' ? renderEmployee() : state.view === 'customer' ? renderCustomer() : renderHistory();
+  renderSettings();
+}
+function openPresent() {
+  const r = state.result; if (!r) return;
+  const el = document.getElementById('present');
+  el.innerHTML = `<button class="btn-ghost close" data-action="closePresent">${icon('i-x', 'icon sm')}Sluiten</button><div style="max-width:60ch">${customerBlock(r, true)}</div>`;
+  el.classList.add('on');
+}
+
+/* ---------- events ---------- */
+document.addEventListener('click', e => {
+  const b = e.target.closest('[data-view],[data-action],[data-example],[data-gap],[data-hist]');
+  if (!b) { if (!e.target.closest('#pop') && !e.target.closest('#settingsBtn')) { const pop = document.getElementById('pop'); if (!pop.hidden) { pop.hidden = true; } } return; }
+  if (b.dataset.view) { state.view = b.dataset.view; render(); return; }
+  if (b.dataset.example) { state.view = 'ask'; state.phase = 'input'; state.question = b.dataset.example; render(); startQuestion(b.dataset.example); return; }
+  if (b.dataset.hist !== undefined) { state.result = state.history[+b.dataset.hist]; state.view = 'employee'; render(); return; }
+  if (b.dataset.gap && b.dataset.value !== undefined) { answerGap(b.dataset.gap, b.dataset.value); return; }
+  const a = b.dataset.action;
+  if (a === 'send') { const q = document.getElementById('q').value.trim(); if (q) startQuestion(q); }
+  if (a === 'free') { const v = document.getElementById('free').value.trim(); if (v) answerGap(b.dataset.gap, v); }
+  if (a === 'new') reset();
+  if (a === 'present') openPresent();
+  if (a === 'closePresent') document.getElementById('present').classList.remove('on');
+  if (a === 'closeSettings') document.getElementById('pop').hidden = true;
+});
+document.getElementById('settingsBtn').addEventListener('click', () => { const pop = document.getElementById('pop'); pop.hidden = !pop.hidden; renderSettings(); });
+document.addEventListener('change', e => {
+  if (e.target.name === 'mode') { state.mode = e.target.value; renderSidebar(); }
+});
+document.addEventListener('input', e => {
+  if (e.target.id === 'key') state.apiKey = e.target.value.trim();
+  if (e.target.id === 'q') state.question = e.target.value;
+});
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape') { document.getElementById('present').classList.remove('on'); document.getElementById('pop').hidden = true; }
+  if (e.key === 'Enter' && !e.shiftKey && e.target.id === 'q') { e.preventDefault(); const q = e.target.value.trim(); if (q) startQuestion(q); }
+  if (e.key === 'Enter' && e.target.id === 'free') { e.preventDefault(); const v = e.target.value.trim(); if (v) answerGap(state.gaps[0], v); }
+});
+
+/* ---------- seed: three realistic earlier questions so the tool opens in a working state ---------- */
+function seed(question, fill, stamp) {
+  const ctx = analyze(question); Object.assign(ctx.triage, fill || {}); ctx.triage.complete = true;
+  const r = resolve(ctx); Object.assign(r, composeSim(r)); r.mode = 'sim'; r.timestamp = stamp; state.history.unshift(r);
+}
+seed('Kan ik een geopende dagcrème retourneren?', {}, 'Vandaag 08:41');
+seed('Ik ben zwanger en heb sinds vanochtend hoofdpijn, nog niets genomen', {}, 'Vandaag 09:12');
+seed('Mijn zoon van 8 heeft sinds gisteren keelpijn, we hebben nog niets geprobeerd', {}, 'Vandaag 09:35');
+state.result = state.history[0];
+render();
+</script>
+</body>
+</html>
