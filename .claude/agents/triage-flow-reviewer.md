@@ -19,13 +19,13 @@ tools: Read, Grep, Glob
 
 1. **Classification first.** Is every question classified as `symptom`, `policy`, `promo`, `lookup` or `unknown` before anything else, and do only `symptom` questions run triage? FAIL if a returns or promotion question is walked through who/what/when/tried.
 
-2. **Extraction from free text.** Does the code fill `intended_for` (with age bucket for children), `complaints` (catalog symptom tags), `duration`, `prior_remedies` (with failed flag and tried ingredient) and pregnancy from the typed question before asking anything? FAIL if the four fields are always asked regardless of what was typed. WARN if common phrasings are missed ("mijn dochter van 8", "helpt niet", "al weken").
+2. **Extraction from free text.** Does the code fill the **age** (exact, or a life stage like "peuter"/"tiener"), `complaints` (catalog symptom tags), `duration`, `prior_remedies` (with failed flag and tried ingredient) and pregnancy from the typed question before asking anything? FAIL if the fields are always asked regardless of what was typed. WARN if common phrasings are missed ("mijn dochter van 8", "helpt niet", "al weken").
 
-3. **Ask only the gaps, one at a time, in order.** Are only missing fields asked, one per step, in the order who, child's age, complaints, duration, prior remedies? FAIL if multiple questions are shown at once, if already-known fields are asked again, or if the order is random.
+3. **Ask only the gaps, one at a time, in order.** Are only missing fields asked, one per step, in the order age, complaints, duration, prior remedies? FAIL if multiple questions are shown at once, if already-known fields are asked again, or if the order is random. FAIL if the flow asks who the product is for (self, partner, someone else) instead of the age: that question constrains no safety rule and is not a demographic, and the spec removed it deliberately.
 
 4. **No match, no questions.** When the complaint matches nothing in the catalog, does the flow answer honestly immediately instead of continuing triage? FAIL if the customer is asked three more questions before hearing "we don't carry that".
 
-5. **Completion gate and state persistence.** Is a recommendation impossible until `complete == True` for symptom questions, and is `TriageState` stored in `st.session_state` so it survives reruns? FAIL on either. WARN if there is no way to cancel and start a new question.
+5. **Completion gate and state persistence.** Is a recommendation impossible until `complete == True` for symptom questions, and is `TriageState` stored in `st.session_state` so it survives reruns? FAIL on either. FAIL if an unknown age is defaulted to an adult rather than to the youngest band. WARN if there is no way to cancel and start a new question.
 
 6. **Test coverage.** Do tests cover: a fully specified question that needs zero gap questions, a partial one that needs exactly the missing fields, a non-symptom question that skips triage, and the no-match short-circuit? WARN if only the happy path is tested; FAIL if no triage tests exist.
 

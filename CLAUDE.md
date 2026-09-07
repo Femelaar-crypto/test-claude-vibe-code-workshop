@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## What This Is
 
-**DrugStore Assistant AI**: a Streamlit prototype that helps store employees answer customer questions instantly by searching local product, promotion, and policy data. For symptom questions the assistant runs a triage protocol (who is it for, what complaints, since when, what has been tried) before recommending anything, applies hard safety rules in code, and produces two views: an employee view with reasoning, sources and internal context, and a clean customer-facing view. Every answer is also logged as an anonymous, structured row so the store learns what customers ask, for whom, and what happened. The Anthropic API key lives server-side in `.env`; it never ships to the browser.
+**DrugStore Assistant AI**: a Streamlit prototype that helps store employees answer customer questions instantly by searching local product, promotion, and policy data. For symptom questions the assistant runs a triage protocol (how old the person is, what the complaints are, since when, what has been tried) before recommending anything, applies hard safety rules in code, and produces two views: an employee view with reasoning, sources and internal context, and a clean customer-facing view. Every answer is also logged as an anonymous, structured row so the store learns what customers ask, for whom, and what happened. The Anthropic API key lives server-side in `.env`; it never ships to the browser.
 
 ## Operating Assumptions (Non-Negotiable)
 
@@ -41,7 +41,7 @@ drugstore-assistant/
 │   ├── 1_ask.py                # Ask: free-text question, then only the missing triage fields
 │   ├── 2_employee_answer.py    # Employee view: answer, reasoning, safety checks, sources
 │   ├── 3_customer_view.py      # Customer-facing: clean, large type, presentation mode
-│   └── 4_history.py            # History: reopenable questions + Inzichten (analytics sub-tabs)
+│   └── 4_history.py            # Inzichten: linked cross-filter dashboard + reopenable questions
 ├── services/
 │   ├── ai_service.py           # Anthropic API calls, prompt, dual-view composition, degraded mode
 │   ├── triage_service.py       # Classification, extraction from free text, gap questions
@@ -85,16 +85,18 @@ python demo/build_demo.py       # rebuild the demo after editing data/*.json
 ## Triage Protocol (parse first, ask only the gaps)
 
 1. **Classify** the question: `symptom`, `policy`, `promo`, `lookup`, or `unknown`. Only `symptom` runs triage; the others answer immediately from data.
-2. **Extract** from the free text whatever is already there: `intended_for` (plus an age bucket for children), `complaints` (symptom tags from the catalog vocabulary), `duration`, `prior_remedies` (plus whether it failed and which active ingredient), pregnancy or breastfeeding.
+2. **Extract** from the free text whatever is already there: the **age** of the person who will use the product (an exact age like "mijn dochter van 8", or a life stage like "peuter" or "tiener"), `complaints` (symptom tags from the catalog vocabulary), `duration`, `prior_remedies` (plus whether it failed and which active ingredient), pregnancy or breastfeeding.
 3. **No match, no questions.** If the complaint matches nothing in the catalog, answer honestly at once: nothing suitable in the assortment, ask the pharmacist. Do not walk the customer through triage first.
-4. **Ask only the missing fields**, one at a time, in this order: who, child's age, complaints, duration, prior remedies. Quick-pick chips plus free text.
+4. **Ask only the missing fields**, one at a time, in this order: age, complaints, duration, prior remedies. Quick-pick chips plus free text.
 5. `complete` is true when all four fields are filled. Only then search and recommend.
+
+**Ask for age, never for the relationship.** Whether the product is for the customer, their partner or someone else changes nothing: it constrains no safety rule and describes no demographic. Age constrains every age rule and is the demographic the store actually wants. So there is one question, "how old is the person who will use it", answered with a band or an exact age. The seven bands are `0-5`, `6-11`, `12-17`, `18-34`, `35-49`, `50-64`, `65+`; the first four boundaries are exactly the `min_age` thresholds in the catalog, so the band alone is enough to decide safety.
 
 **Targets:** a typical typed question needs at most two follow-up questions. Simulated answers appear within a second; live answers within five seconds, with a visible loading state.
 
 ## Safety Rules (Non-Negotiable, enforced in code)
 
-- **Age:** block a product when `min_age` is above the person's age, or `age_restriction` applies to a minor. Blocked means not recommended; the employee sees the reason.
+- **Age:** block a product when `min_age` is above the person's age, or `age_restriction` applies to a minor. Blocked means not recommended; the employee sees the reason. An age given as a band is evaluated at the **bottom** of that band, and an unknown age is treated as a young child, never as an adult: the conservative direction is the only safe default.
 - **Pregnancy or breastfeeding mentioned:** block `pregnancy_safe == false`; flag `pregnancy_safe == null` as "consult the pharmacist first". If not mentioned and the recommended product is not `pregnancy_safe == true`, remind the employee to ask.
 - **Tried without effect:** never recommend the same active ingredient again.
 - **Escalate before selling:** child under 6 with fever, diarrhoea or vomiting = doctor today. Complaints "al langere tijd" = doctor. Prescription medication in use = pharmacist. Failed OTC attempt = pharmacist. Fever for a week or longer = doctor.
@@ -116,7 +118,8 @@ Purpose: the store learns what customers ask, for whom, and what happened, witho
 | `question_type` | `symptom`, `policy`, `promo`, `lookup`, `unknown` |
 | `category` | one **standard category** (below) |
 | `complaints` | symptom tags |
-| `audience` | `intended_for` + `age_bucket`; `pregnant` flag |
+| `age_band` | one of the seven bands; empty when no age was recorded. The exact age is never logged |
+| `pregnant` | flag |
 | `duration`, `prior_remedies` | as in `TriageState` |
 | `outcome` | `recommended`, `blocked` (no safe product), `no_match` (not in assortment), `answered` (policy/promo/lookup), `unknown` |
 | `escalation` | `none`, `pharmacist`, `doctor`, `urgent` |
@@ -132,18 +135,19 @@ Purpose: the store learns what customers ask, for whom, and what happened, witho
 - **Period control**: 7 / 30 / 60 days, applied before anything else.
 - **Filter bar**: the active selection as removable chips, plus "Alles wissen". Filters combine with AND across dimensions.
 - **KPI strip**: questions in the selection, referral rate, not-in-assortment rate, promotion rate. When a filter is active each rate also shows its difference in percentage points against the period average, so the selection is always read against a baseline.
-- **Klacht × doelgroep matrix**: the cross-reference centrepiece. Cell intensity is one green ramp (light to dark) on count; the number is always printed, so colour never carries meaning alone. Clicking a cell sets both filters at once. Row totals on the right.
+- **Klacht × leeftijd matrix**: the cross-reference centrepiece. Cell intensity is one green ramp (light to dark) on count; the number is always printed, so colour never carries meaning alone. Clicking a cell sets both filters at once. Row totals on the right.
 - **"Opvallend aan deze selectie"**: over-representation (lift) of every attribute in the selection against the period average, ranked, e.g. "2.3× Klant zelf, 61% van deze selectie". Only shown at eight or more rows and three or more occurrences, so a handful of questions never produces a confident-looking claim.
-- **Linked panels**: Klachten, Doelgroep, Uitkomst, Doorverwijzing, Categorie, Sinds wanneer. Each bar shows the selection as a filled portion inside the period total, so subset and baseline are visible at once. A panel never filters itself, so switching value within a dimension stays possible.
+- **Aantal / Aandeel toggle on the age panel.** Counts follow group size, so the largest band tops almost every complaint and looks like an insight when it is not. Aandeel shows what fraction of *that* age group's questions match the selection, which is the only fair comparison between groups of different size: acne is 15% of the 18-34 band's questions but 44% of the 12-17 band's. Offered only while a filter is active, because without one it is meaningless.
+- **Linked panels**: Klachten, Leeftijd, Uitkomst, Doorverwijzing, Categorie, Sinds wanneer. Each bar shows the selection as a filled portion inside the period total, so subset and baseline are visible at once. A panel never filters itself, so switching value within a dimension stays possible.
 - **Gevraagd, niet in assortiment**: the assortment gaps, framed as the purchasing list.
 
 CSV export always exports exactly the current filtered selection, not everything.
 
 **Charts follow one rule set:** one hue for magnitude, count printed next to every bar, no pie charts, no second y-axis, and the whole dashboard readable as text if colour is unavailable.
 
-**Demo data.** The demo ships ~330 generated log rows across 60 days so the dashboard is meaningful on open. They are produced by running the real engine (search, safety, escalation), never by writing outcome fields directly, so no combination appears that the rules could not produce. Audience and complaint are deliberately correlated (acne skews to teenagers, koorts to under-fives, gewrichtspijn to older adults). The Streamlit app reads real rows instead; the generator is demo scaffolding.
+**Demo data.** The demo ships ~1400 generated log rows across 60 days so the dashboard is meaningful on open. They are produced by running the real engine (search, safety, escalation), never by writing outcome fields directly, so no combination appears that the rules could not produce. Age and complaint are deliberately correlated (acne skews to teenagers, koorts to under-fives, gewrichtspijn to over-fifties), and band sizes differ as they do in a real customer base, so the count-versus-share distinction is visible rather than theoretical. The Streamlit app reads real rows instead; the generator is demo scaffolding.
 
-**Data policy (AVG):** the raw question text stays in the session only and is never exported. The log holds structured fields, never names, contact details or free text. Nothing identifies a person; age is a bucket. This is what `policies.json` `policy004` promises the customer.
+**Data policy (AVG):** the raw question text stays in the session only and is never exported. An exact age, when the employee types one, is used for the safety decision and then reduced to its band; only the band is logged. The log holds structured fields, never names, contact details or free text. Nothing identifies a person; age is a bucket. This is what `policies.json` `policy004` promises the customer.
 
 ## Product Roadmap (proposed, not built)
 
@@ -187,8 +191,8 @@ Employee types the question (free text)
 
 ```python
 class TriageState:
-    intended_for: str | None       # "mezelf" | "partner" | "kind" | "ander"
-    age_bucket: str | None         # "0-5" | "6-11" | "12-17" | "volwassen"
+    age_band: str | None           # "0-5" | "6-11" | "12-17" | "18-34" | "35-49" | "50-64" | "65+"
+    age: int | None                # exact age when stated; stays in the session, never logged
     pregnant: bool                 # pregnancy or breastfeeding mentioned
     complaints: list[str]          # symptom tags from the catalog vocabulary
     complaint_raw: str             # free text when no tag matched

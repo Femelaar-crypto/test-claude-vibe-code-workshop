@@ -11,12 +11,12 @@ Implement `services/data_service.py`: load the three JSON files with `st.cache_d
 **Done when:** `tests/test_data_service.py` passes; a promotion never makes a non-matching product appear.
 
 ## Milestone 3: Classification and extraction
-Port `analyze`, `matchSymptoms`, `detectWho`, `detectDuration`, `detectPrior` and `computeGaps` from `demo/template.html` into `services/triage_service.py`.
-**Done when:** "Mijn dochter van 8 heeft sinds gisteren keelpijn, nog niets geprobeerd" produces a complete `TriageState` with zero gap questions, and "Kan ik dit retourneren?" is classified `policy`. Run `triage-flow-reviewer`.
+Port `analyze`, `matchSymptoms`, `detectAge`, `detectDuration`, `detectPrior` and `computeGaps` from `demo/template.html` into `services/triage_service.py`.
+**Done when:** "Mijn dochter van 8 heeft sinds gisteren keelpijn, nog niets geprobeerd" produces a complete `TriageState` (age 8, band 6-11) with zero gap questions, "Iemand heeft keelpijn" asks for the age first, and "Kan ik dit retourneren?" is classified `policy`. Run `triage-flow-reviewer`.
 
 ## Milestone 4: Ask page with gap questions
 Build `pages/1_ask.py`: free-text input, then only the missing fields one at a time, backed by `st.session_state`. Include the no-match short-circuit.
-**Done when:** "Mijn vrouw heeft keelpijn" asks exactly two questions (since when, tried anything) and "iets tegen een kater" asks none.
+**Done when:** "Mijn man van 45 heeft keelpijn" asks exactly two questions (since when, tried anything) and "iets tegen een kater" asks none.
 
 ## Milestone 5: Safety rules
 Port `applySafety` and `decideEscalation` into `services/safety_service.py` with unit tests for every rule in CLAUDE.md.
@@ -31,7 +31,7 @@ Build `pages/2_employee_answer.py` (escalation banner, checks, blocked, alternat
 **Done when:** the employee can turn the screen to the customer without any internal information visible.
 
 ## Milestone 8: History and the linked dashboard
-Implement `services/analytics_service.py` (log row per `QueryResult`, standard categories, cross-filtered aggregations, lift against the period baseline, CSV export) and `pages/4_history.py`: period control, filter chips, KPI strip with deltas, the klacht × doelgroep matrix, the linked panels, the assortment-gap list, and the reopenable session questions.
+Implement `services/analytics_service.py` (log row per `QueryResult`, standard categories, cross-filtered aggregations, lift against the period baseline, CSV export) and `pages/4_history.py`: period control, filter chips, KPI strip with deltas, the klacht × leeftijd matrix with its Aantal/Aandeel toggle, the linked panels, the assortment-gap list, and the reopenable session questions.
 **Done when:** selecting a complaint narrows every other panel and the matrix, selecting a matrix cell sets both filters, the export contains only the filtered selection and no question text or personal data, and every category falls in the standard list. Compare the same selection against `demo/index.html`.
 
 ## Milestone 9: Polish

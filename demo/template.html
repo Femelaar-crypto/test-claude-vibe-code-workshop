@@ -186,6 +186,7 @@
   .fchip b { font-weight: 600; }
   .seg { display: inline-flex; border: 1px solid var(--border); border-radius: 10px; overflow: hidden; background: var(--surface); }
   .segbtn { background: none; border: none; padding: 0 12px; min-height: 40px; font-size: 13px; color: var(--muted); cursor: pointer; }
+  .seg.small .segbtn { min-height: 30px; padding: 0 10px; font-size: 12px; }
   .segbtn + .segbtn { border-left: 1px solid var(--border); }
   .segbtn:hover { color: var(--text); }
   .segbtn.on { background: var(--accent-soft); color: var(--accent-dark); font-weight: 600; }
@@ -341,10 +342,10 @@ const CATEGORY_WORDS = { 'vitamines': ['vitamines', 'vitamine', 'supplementen'],
 
 const EXAMPLES = [
   'Mijn dochter van 8 heeft sinds gisteren keelpijn, we hebben nog niets geprobeerd',
-  'Ik ben zwanger en heb sinds vanochtend hoofdpijn',
+  'Ik ben 31 en zwanger, sinds vanochtend hoofdpijn',
+  'Iets tegen spierpijn voor mijn vader van 68',
   'Ik slaap al maanden slecht, melatonine helpt niet',
   'Kan ik een geopende dagcrème retourneren?',
-  'Is er een aanbieding op vitamines?',
   'Heb je iets tegen een kater?',
 ];
 
@@ -363,7 +364,7 @@ const shortName = p => p.name.replace(/\s*\(.*?\)\s*$/, '').replace(/\b\d+([.,]\
 /* ---------- state ---------- */
 const state = {
   view: 'ask', phase: 'input', mode: 'sim', apiKey: '', csvNotice: '',
-  period: 30, filters: { complaint: null, audience: null, category: null, outcome: null, escalation: null, duration: null, pregnant: null },
+  period: 30, ageMode: 'count', filters: { complaint: null, age_band: null, category: null, outcome: null, escalation: null, duration: null, pregnant: null },
   question: '', ctx: null, gaps: [], result: null, history: [], liveNotice: '',
 };
 const STANDARD_CATEGORIES = [...new Set(PRODUCTS.map(p => p.category)), 'Beleid', 'Acties', 'Product opzoeken', 'Overig'];
@@ -402,18 +403,20 @@ function matchCategories(t) {
   for (const [cat, words] of Object.entries(CATEGORY_WORDS)) if (words.some(w => has(t, w))) out.push(cat);
   return out;
 }
-function detectWho(t) {
-  let who = null, age = null, bucket = null;
-  const ageM = t.match(/\b(\d{1,2})\s*(?:jaar|jr|jarig|jarige)\b/) || t.match(/\b(?:van|is|wordt)\s+(\d{1,2})\b/);
-  if (ageM) age = parseInt(ageM[1], 10);
-  if (/\b(dochter|zoon|zoontje|dochtertje|kind|kinderen|baby|peuter|kleuter|tiener|kleintje)\b/.test(t)) who = 'kind';
-  else if (/\b(partner|vrouw|man|vriend|vriendin|echtgenoot|echtgenote)\b/.test(t) && /\b(mijn|m n|me)\b/.test(t)) who = 'partner';
-  else if (/\b(moeder|vader|oma|opa|broer|zus|collega|buurvrouw|buurman|schoonmoeder|schoonvader)\b/.test(t)) who = 'ander';
-  else if (/\b(ik|mij|mezelf|mijzelf|zelf|m n)\b/.test(t)) who = 'mezelf';
-  if (/\bbaby\b/.test(t)) bucket = '0-5'; else if (/\b(peuter|kleuter)\b/.test(t)) bucket = '0-5'; else if (/\btiener\b/.test(t)) bucket = '12-17';
-  if (age !== null) { bucket = age < 6 ? '0-5' : age < 12 ? '6-11' : age < 18 ? '12-17' : 'volwassen'; if (who === null) who = age < 18 ? 'kind' : 'ander'; if (who === 'kind' && age >= 18) who = 'ander'; }
-  if (who && who !== 'kind') bucket = bucket || 'volwassen';
-  return { who, bucket, age };
+// Age drives both safety and demographics. The relationship to the customer
+// (self, partner, someone else) tells us neither, so we do not ask for it.
+const AGE_BANDS = ['0-5', '6-11', '12-17', '18-34', '35-49', '50-64', '65+'];
+const BAND_MIN = { '0-5': 0, '6-11': 6, '12-17': 12, '18-34': 18, '35-49': 35, '50-64': 50, '65+': 65 };
+const BAND_LABEL = { '0-5': '0-5 jaar', '6-11': '6-11 jaar', '12-17': '12-17 jaar', '18-34': '18-34 jaar', '35-49': '35-49 jaar', '50-64': '50-64 jaar', '65+': '65 jaar en ouder' };
+const bandOfAge = a => a < 6 ? '0-5' : a < 12 ? '6-11' : a < 18 ? '12-17' : a < 35 ? '18-34' : a < 50 ? '35-49' : a < 65 ? '50-64' : '65+';
+function detectAge(t) {
+  let age = null, band = null;
+  const m = t.match(/\b(\d{1,3})\s*(?:jaar|jr|jarig|jarige)\b/) || t.match(/\b(?:van|is|ben|wordt|word)\s+(\d{1,3})\b/);
+  if (m) { const v = parseInt(m[1], 10); if (v >= 0 && v <= 120) age = v; }
+  if (age !== null) band = bandOfAge(age);
+  else if (/\b(baby|zuigeling|dreumes|peuter|kleuter)\b/.test(t)) band = '0-5';
+  else if (/\b(tiener|puber|adolescent)\b/.test(t)) band = '12-17';
+  return { age, band };
 }
 function detectDuration(t) {
   if (/\b(sinds|vanaf)\s+(vandaag|vanochtend|vanmorgen|vannacht|vanmiddag|net|zojuist)\b/.test(t) || /\b(vandaag|vanochtend|vanmorgen|vannacht|net begonnen)\b/.test(t)) return 'vandaag';
@@ -448,13 +451,13 @@ function classify(t, tags, productIds) {
 function analyze(question) {
   const t = norm(question);
   const tags = matchSymptoms(t);
-  const who = detectWho(t);
+  const who = detectAge(t);
   const pr = detectPrior(t);
   // a product named as an already-tried remedy is not what the customer is asking for
   const productIds = matchProducts(t).filter(id => !pr.triedProductIds.includes(id));
   const qtype = classify(t, tags, productIds);
   const triage = {
-    intended_for: who.who, age_bucket: who.bucket, age: who.age,
+    age_band: who.band, age: who.age,
     pregnant: /\b(zwanger|zwangerschap|borstvoeding)\b/.test(t),
     complaints: tags, complaint_raw: tags.length ? '' : rawComplaint(t),
     duration: detectDuration(t), prior_remedies: pr.prior, prior_failed: pr.failed, tried_ingredient: pr.triedIngredient, tried_product_ids: pr.triedProductIds,
@@ -465,8 +468,7 @@ function analyze(question) {
 function computeGaps(ctx) {
   if (ctx.qtype !== 'symptom') return [];
   const tr = ctx.triage, gaps = [];
-  if (!tr.intended_for) gaps.push('intended_for');
-  if (tr.intended_for === 'kind' && !tr.age_bucket) gaps.push('age');
+  if (!tr.age_band) gaps.push('age_band');
   if (!tr.complaints.length && !tr.complaint_raw) gaps.push('complaints');
   if (!tr.duration) gaps.push('duration');
   if (!tr.prior_remedies) gaps.push('prior_remedies');
@@ -487,11 +489,14 @@ function searchProducts(ctx) {
     return { p, score };
   }).filter(x => x.score > 0).sort((a, b) => b.score - a.score || a.p.price_eur - b.p.price_eur).map(x => x.p);
 }
-function effectiveAge(tr) { return tr.intended_for === 'kind' ? ({ '0-5': 0, '6-11': 6, '12-17': 12 }[tr.age_bucket] ?? 0) : 18; }
-function whoLabel(tr) {
-  if (!tr.intended_for) return 'Niet vermeld';
-  if (tr.intended_for === 'kind') return 'Kind' + (tr.age_bucket ? ` (${tr.age_bucket} jaar)` : '');
-  return { mezelf: 'De klant zelf', partner: 'Partner van de klant', ander: 'Iemand anders (volwassene)' }[tr.intended_for];
+// Unknown age is treated as the youngest possible: never assume an adult.
+function effectiveAge(tr) { return tr.age != null ? tr.age : (tr.age_band ? BAND_MIN[tr.age_band] : 0); }
+function ageLabel(tr) { return !tr.age_band ? 'Niet vermeld' : (tr.age != null ? tr.age + ' jaar' : BAND_LABEL[tr.age_band]); }
+function bandLabel(tr) { return tr.age_band ? BAND_LABEL[tr.age_band] : 'Onbekend'; }
+const isMinorBand = b => ['0-5', '6-11', '12-17'].includes(b);
+function personPhrase(tr) {
+  if (!tr.age_band) return 'deze persoon';
+  return (isMinorBand(tr.age_band) ? 'een kind van ' : 'iemand van ') + (tr.age != null ? tr.age + ' jaar' : BAND_LABEL[tr.age_band]);
 }
 function applySafety(candidates, ctx) {
   const tr = ctx.triage, age = effectiveAge(tr), allowed = [], blocked = [], checks = [];
@@ -508,15 +513,15 @@ function applySafety(candidates, ctx) {
   }
   // de-prioritise flagged items, keep order otherwise
   allowed.sort((a, b) => a.flags.length - b.flags.length);
-  checks.push({ ok: true, text: `Leeftijd: ${whoLabel(tr)}${tr.intended_for === 'kind' ? ', producten onder de minimumleeftijd uitgesloten' : ''}` });
+  checks.push({ ok: true, text: `Leeftijd: ${ageLabel(tr)}${isMinorBand(tr.age_band) ? ', producten boven deze leeftijdsgrens uitgesloten' : ''}` });
   if (tr.pregnant) checks.push({ ok: true, text: 'Zwangerschap of borstvoeding vermeld: onveilige producten uitgesloten' });
-  else if (tr.intended_for !== 'kind' && !(tr.age && tr.age >= 50) && allowed.some(a => a.p.pregnancy_safe !== true)) checks.push({ warn: true, text: 'Zwangerschap of borstvoeding: niet vermeld, vraag na voordat je dit meegeeft' });
+  else if (['18-34', '35-49'].includes(tr.age_band) && allowed.some(a => a.p.pregnancy_safe !== true)) checks.push({ warn: true, text: 'Zwangerschap of borstvoeding: niet vermeld, vraag na voordat je dit meegeeft' });
   if (tr.tried_ingredient) checks.push({ ok: true, text: `Eerder ${tr.tried_ingredient} geprobeerd${tr.prior_failed ? ' zonder effect: ander werkzaam bestanddeel gezocht' : ''}` });
   return { allowed, blocked, checks };
 }
 function decideEscalation(ctx, allowed) {
   const tr = ctx.triage, tags = tr.complaints;
-  const childUnder6 = tr.intended_for === 'kind' && tr.age_bucket === '0-5';
+  const childUnder6 = tr.age_band === '0-5';
   if (childUnder6 && tags.some(x => ['koorts', 'diarree', 'braken', 'uitdroging'].includes(x))) return { level: 'urgent', reason: 'Kind onder de 6 jaar met koorts, diarree of braken: vandaag nog contact met de huisarts.' };
   if (tags.includes('koorts') && ['een week of langer', 'al langere tijd'].includes(tr.duration)) return { level: 'doctor', reason: 'Koorts die langer dan een week aanhoudt hoort bij de huisarts, niet bij de drogist.' };
   if (tr.duration === 'al langere tijd') return { level: 'doctor', reason: 'Klachten die al langere tijd aanhouden: adviseer een afspraak bij de huisarts. Een product kan hooguit tijdelijk verlichten.' };
@@ -587,7 +592,7 @@ function resolveCore(ctx) {
 
 /* ---------- simulated composition (Dutch templates) ---------- */
 function composeSim(r) {
-  const tr = r.triage, who = tr.intended_for === 'mezelf' ? 'u' : tr.intended_for === 'kind' ? 'uw kind' : tr.intended_for ? 'de persoon' : 'u';
+  const tr = r.triage, who = isMinorBand(tr.age_band) ? 'het kind' : 'deze persoon';
   if (r.qtype === 'policy') {
     const emp = r.policies.map(p => `${p.title}: ${p.description} (bron ${p.id})`).join(' ');
     const cus = r.policies.map(p => p.customer_text).join(' ');
@@ -617,7 +622,7 @@ function composeSim(r) {
     customer_answer: `${leadCus ? leadCus + ' ' : ''}Voor ${cl} hebben we helaas geen passend product. De apotheker kan met u meedenken.`,
   };
   if (!r.recommended) return {
-    employee_answer: `${lead ? lead + ' ' : ''}Geen geschikt product voor ${whoLabel(tr).toLowerCase()}: ${r.blocked.map(b => `${b.p.name} (${b.reason})`).join('; ')}. Verkoop niets zonder advies van de apotheker of huisarts.`,
+    employee_answer: `${lead ? lead + ' ' : ''}Geen geschikt product voor ${personPhrase(tr)}: ${r.blocked.map(b => `${b.p.name} (${b.reason})`).join('; ')}. Verkoop niets zonder advies van de apotheker of huisarts.`,
     customer_answer: `${leadCus ? leadCus + ' ' : ''}Voor ${who} hebben we hier geen geschikt product zonder advies. ${r.blocked.length ? `De gebruikelijke middelen zijn ${r.blocked.length > 1 ? 'in dit geval niet geschikt' : 'in dit geval niet geschikt'}.` : ''}`.trim(),
   };
   const p = r.recommended, pl = priceLine(p);
@@ -626,7 +631,7 @@ function composeSim(r) {
   const blockTxt = r.blocked.length ? ` Niet aanbevelen: ${r.blocked.map(b => `${b.p.name} (${b.reason})`).join('; ')}.` : '';
   const flagTxt = r.recFlags && r.recFlags.length ? ` Let op: ${r.recFlags.join('; ')}.` : '';
   const timing = esc_.level === 'doctor' ? ' Als tijdelijke verlichting in de tussentijd:' : '';
-  const emp = `${lead ? lead : ''}${timing} ${p.name} (${eur(p.price_eur)}, bron ${p.id}) past bij ${cl} voor ${whoLabel(tr).toLowerCase()}. Gebruik: ${p.usage}.${promoTxt}${flagTxt}${p.disclaimer ? ` Vermeld: ${p.disclaimer}` : ''}${altTxt}${blockTxt}`.replace(/\s+/g, ' ').trim();
+  const emp = `${lead ? lead : ''}${timing} ${p.name} (${eur(p.price_eur)}, bron ${p.id}) past bij ${cl} voor ${personPhrase(tr)}. Gebruik: ${p.usage}.${promoTxt}${flagTxt}${p.disclaimer ? ` Vermeld: ${p.disclaimer}` : ''}${altTxt}${blockTxt}`.replace(/\s+/g, ' ').trim();
   const cus = `${leadCus ? leadCus + ' ' : ''}${esc_.level === 'doctor' ? 'Voor nu kan ' : ''}${shortName(p)} ${esc_.level === 'doctor' ? 'de klachten verlichten' : `kan helpen bij ${cl}`}. ${p.usage}.${promoTxt}${p.disclaimer ? ` ${p.disclaimer}` : ''}`.replace(/\s+/g, ' ').trim();
   return { employee_answer: emp, customer_answer: cus };
 }
@@ -643,7 +648,7 @@ async function composeLive(r) {
   const p = r.recommended;
   const ctxOut = {
     question: r.question, question_type: r.qtype,
-    triage: { intended_for: whoLabel(r.triage), pregnant_or_nursing: r.triage.pregnant, complaints: r.triage.complaints.length ? r.triage.complaints : [r.triage.complaint_raw], duration: r.triage.duration, prior_remedies: r.triage.prior_remedies, prior_failed: r.triage.prior_failed },
+    triage: { leeftijd: ageLabel(r.triage), pregnant_or_nursing: r.triage.pregnant, complaints: r.triage.complaints.length ? r.triage.complaints : [r.triage.complaint_raw], duration: r.triage.duration, prior_remedies: r.triage.prior_remedies, prior_failed: r.triage.prior_failed },
     recommended: p ? { id: p.id, name: p.name, price_eur: p.price_eur, promo_price_eur: priceLine(p).was ? +priceLine(p).now.toFixed(2) : null, usage: p.usage, disclaimer: p.disclaimer, min_age: p.min_age, notes: r.recFlags || [] } : null,
     alternatives: r.alternatives.map(a => ({ id: a.p.id, name: a.p.name, price_eur: a.p.price_eur, why: a.why })),
     blocked: r.blocked.map(b => ({ id: b.p.id, name: b.p.name, reason: b.reason })),
@@ -677,8 +682,12 @@ function startQuestion(q) {
 }
 function answerGap(field, value) {
   const tr = state.ctx.triage;
-  if (field === 'intended_for') { tr.intended_for = value; if (value !== 'kind') tr.age_bucket = 'volwassen'; }
-  if (field === 'age') tr.age_bucket = value;
+  if (field === 'age_band') {
+    const n = parseInt(String(value).replace(/[^0-9]/g, ''), 10);
+    if (!isNaN(n) && n >= 0 && n <= 120) { tr.age = n; tr.age_band = bandOfAge(n); }
+    else if (AGE_BANDS.includes(value)) tr.age_band = value;
+    else return; // unparseable, stay on this question
+  }
   if (field === 'duration') tr.duration = value;
   if (field === 'prior_remedies') tr.prior_remedies = value;
   if (field === 'complaints') {
@@ -710,15 +719,14 @@ function reset() { state.phase = 'input'; state.question = ''; state.ctx = null;
 
 /* ---------- rendering ---------- */
 const GAP_UI = {
-  intended_for: { title: 'Voor wie is het product bedoeld?', chips: [['De klant zelf', 'mezelf'], ['Partner', 'partner'], ['Kind', 'kind'], ['Iemand anders (volwassene)', 'ander']] },
-  age: { title: 'Hoe oud is het kind?', chips: [['0 tot 5 jaar', '0-5'], ['6 tot 11 jaar', '6-11'], ['12 tot 17 jaar', '12-17']] },
-  complaints: { title: 'Wat zijn de klachten?', chips: [['Hoofdpijn', 'hoofdpijn'], ['Keelpijn', 'keelpijn'], ['Verkoudheid', 'verkoudheid'], ['Hoest', 'hoest'], ['Koorts', 'koorts'], ['Slaapproblemen', 'slaapproblemen'], ['Spierpijn', 'spierpijn'], ['Huidirritatie', 'huidirritatie']], free: true },
+  age_band: { title: 'Hoe oud is de persoon die het gaat gebruiken?', chips: AGE_BANDS.map(b => [BAND_LABEL[b], b]), free: true, freeHint: 'Of typ de exacte leeftijd, bijvoorbeeld 8' },
+  complaints: { title: 'Wat zijn de klachten?', chips: [['Hoofdpijn', 'hoofdpijn'], ['Keelpijn', 'keelpijn'], ['Verkoudheid', 'verkoudheid'], ['Hoest', 'hoest'], ['Koorts', 'koorts'], ['Slaapproblemen', 'slaapproblemen'], ['Spierpijn', 'spierpijn'], ['Huidirritatie', 'huidirritatie']], free: true, freeHint: 'Of typ de klacht zelf, bijvoorbeeld hooikoorts' },
   duration: { title: 'Sinds wanneer?', chips: [['Vandaag', 'vandaag'], ['Een paar dagen', 'een paar dagen'], ['Een week of langer', 'een week of langer'], ['Al langere tijd', 'al langere tijd']] },
   prior_remedies: { title: 'Is er al iets geprobeerd?', chips: [['Nog niets', 'nog niets'], ['Iets zonder recept', 'iets zonder recept'], ['Iets op recept', 'iets op recept'], ['Weet niet', 'weet niet']] },
 };
 function foundTags(tr) {
   const items = [
-    ['Voor wie', tr.intended_for ? whoLabel(tr) : null],
+    ['Leeftijd', tr.age_band ? ageLabel(tr) : null],
     ['Klacht', tr.complaints.length ? tr.complaints.join(', ') : (tr.complaint_raw || null)],
     ['Sinds', tr.duration],
     ['Geprobeerd', tr.prior_remedies ? (tr.prior_remedies + (tr.tried_ingredient ? ` (${tr.tried_ingredient}${tr.prior_failed ? ', hielp niet' : ''})` : '')) : null],
@@ -760,7 +768,7 @@ function renderAsk() {
       <div class="label" style="color:var(--accent); margin-bottom:8px">Nog even nodig, ${state.gaps.length} ${state.gaps.length === 1 ? 'vraag' : 'vragen'}</div>
       <h2>${esc(ui.title)}</h2>
       <div class="chip-grid" style="margin-top:16px">${ui.chips.map(([l, v]) => `<button class="chip" data-gap="${field}" data-value="${esc(v)}">${esc(l)}</button>`).join('')}</div>
-      ${ui.free ? `<div class="row" style="margin-top:12px"><label class="sr" for="free">Of typ de klacht</label><input id="free" class="input" placeholder="Of typ de klacht zelf, bv. hooikoorts"><button class="btn-outline" data-action="free" data-gap="${field}">Doorgaan</button></div>` : ''}
+      ${ui.free ? `<div class="row" style="margin-top:12px"><label class="sr" for="free">${esc(ui.freeHint || 'Of typ het zelf')}</label><input id="free" class="input" placeholder="${esc(ui.freeHint || 'Of typ het zelf')}"><button class="btn-outline" data-action="free" data-gap="${field}">Doorgaan</button></div>` : ''}
     </div>`;
   }
   return head + `<div class="card" style="margin-top:16px"><div class="row" style="justify-content:space-between"><div style="font-weight:500">Antwoord staat klaar.</div><div class="row"><button class="btn-primary" data-view="employee">Medewerker</button><button class="btn-outline" data-view="customer">Klant</button></div></div></div>`;
@@ -790,7 +798,7 @@ function renderEmployee() {
   if (r.qtype === 'symptom') {
     out += `<div class="grid">
       <div class="card"><div class="label" style="margin-bottom:8px">${icon('i-clip', 'icon sm')} Triage</div>
-        <div class="kv"><span class="k">Voor wie</span><span class="v">${esc(whoLabel(tr))}</span></div>
+        <div class="kv"><span class="k">Leeftijd</span><span class="v">${esc(ageLabel(tr))}</span></div>
         <div class="kv"><span class="k">Klacht</span><span class="v">${esc(cap(complaintLabel(tr)))}</span></div>
         <div class="kv"><span class="k">Sinds</span><span class="v">${esc(cap(tr.duration || '?'))}</span></div>
         <div class="kv"><span class="k">Geprobeerd</span><span class="v">${esc(cap(tr.prior_remedies || '?'))}${tr.tried_ingredient ? ` (${esc(tr.tried_ingredient)}${tr.prior_failed ? ', hielp niet' : ''})` : ''}</span></div>
@@ -829,11 +837,10 @@ function renderCustomer() {
   return head + `<div class="card lift customer-card">${customerBlock(r, false)}</div>`;
 }
 /* ---------- analytics: structured rows, no personal data ---------- */
-function audienceLabel(tr) {
-  if (!tr.intended_for) return 'Onbekend';
-  if (tr.intended_for === 'kind') return 'Kind ' + (tr.age_bucket ? tr.age_bucket + ' jaar' : '(leeftijd onbekend)');
-  return { mezelf: 'Klant zelf', partner: 'Partner', ander: 'Andere volwassene' }[tr.intended_for];
-}
+// The log stores the band only, never the exact age that may have been typed.
+// No age recorded means the row carries no age at all, rather than an "unknown" bucket
+// that would sit in the demographic panel as if it were a group.
+function audienceLabel(tr) { return tr.age_band ? BAND_LABEL[tr.age_band] : ''; }
 // The gap term is the one field derived from free text. Keep it a short term, never a sentence.
 function gapTerm(r) {
   if (!(r.outcome === 'no_match' && r.qtype === 'symptom')) return '';
@@ -847,7 +854,7 @@ function rowOf(r, isSession) {
   return {
     at: r.at, question_type: r.qtype, category: r.category,
     complaints: tr.complaints.length ? tr.complaints.slice() : (tr.complaint_raw ? [tr.complaint_raw] : []),
-    audience: audienceLabel(tr), pregnant: !!tr.pregnant,
+    age_band: audienceLabel(tr), pregnant: !!tr.pregnant,
     duration: tr.duration || 'Niet vermeld', prior_remedies: tr.prior_remedies || 'Niet vermeld',
     outcome: r.outcome, escalation: r.escalation ? r.escalation.level : 'none',
     recommended_id: r.recommended ? r.recommended.id : '', recommended_name: r.recommended ? shortName(r.recommended) : '',
@@ -870,12 +877,13 @@ function weighted(weights, rnd) {
   return keys[keys.length - 1];
 }
 const PROFILES = [
-  { w: 40, intended_for: 'mezelf', age_bucket: 'volwassen', complaints: { hoofdpijn: 26, verkoudheid: 14, slaapproblemen: 12, vermoeidheid: 10, spierpijn: 9, keelpijn: 8, menstruatiepijn: 8, hoest: 6, huidirritatie: 6, weerstand: 5, 'droge huid': 4, acne: 4 } },
-  { w: 13, intended_for: 'partner', age_bucket: 'volwassen', complaints: { spierpijn: 18, hoest: 16, rugpijn: 14, hoofdpijn: 14, verkoudheid: 14, 'stoppen met roken': 14, keelpijn: 10 } },
-  { w: 11, intended_for: 'kind', age_bucket: '0-5', complaints: { koorts: 30, verkoudheid: 20, diarree: 14, huidirritatie: 14, wond: 12, braken: 10 } },
-  { w: 12, intended_for: 'kind', age_bucket: '6-11', complaints: { keelpijn: 24, verkoudheid: 22, koorts: 18, wond: 16, hoest: 14, huidirritatie: 6 } },
-  { w: 9, intended_for: 'kind', age_bucket: '12-17', complaints: { acne: 44, hoofdpijn: 18, spierpijn: 14, keelpijn: 10, slaapproblemen: 8, wond: 6 } },
-  { w: 15, intended_for: 'ander', age_bucket: 'volwassen', complaints: { gewrichtspijn: 28, slaapproblemen: 20, verkoudheid: 14, vermoeidheid: 14, hoofdpijn: 12, weerstand: 6, 'droge huid': 6 } },
+  { w: 9, band: '0-5', complaints: { koorts: 28, verkoudheid: 20, diarree: 14, huidirritatie: 14, wond: 12, braken: 12 } },
+  { w: 9, band: '6-11', complaints: { keelpijn: 24, verkoudheid: 22, koorts: 18, wond: 16, hoest: 14, huidirritatie: 6 } },
+  { w: 8, band: '12-17', complaints: { acne: 42, hoofdpijn: 18, spierpijn: 14, keelpijn: 10, slaapproblemen: 8, wond: 8 } },
+  { w: 24, band: '18-34', complaints: { hoofdpijn: 22, menstruatiepijn: 14, acne: 14, verkoudheid: 12, keelpijn: 10, spierpijn: 10, vermoeidheid: 10, huidirritatie: 8 } },
+  { w: 22, band: '35-49', complaints: { hoofdpijn: 18, rugpijn: 16, spierpijn: 14, verkoudheid: 12, slaapproblemen: 12, 'stoppen met roken': 10, vermoeidheid: 10, hoest: 8 } },
+  { w: 17, band: '50-64', complaints: { gewrichtspijn: 24, slaapproblemen: 18, rugpijn: 14, hoofdpijn: 12, vermoeidheid: 12, 'droge huid': 10, 'stoppen met roken': 10 } },
+  { w: 11, band: '65+', complaints: { gewrichtspijn: 30, 'droge huid': 16, slaapproblemen: 16, vermoeidheid: 12, weerstand: 12, 'verstopte neus': 8, hoofdpijn: 6 } },
 ];
 const LONG_RUNNING = new Set(['acne', 'gewrichtspijn', 'slaapproblemen', 'vermoeidheid', 'droge huid', 'stoppen met roken', 'weerstand']);
 const SHORT_RUNNING = new Set(['koorts', 'wond', 'braken', 'diarree', 'zonnebrand']);
@@ -883,12 +891,12 @@ const GAP_TERMS = { wratten: 5, kater: 4, oorpijn: 4, kalknagel: 3, aambeien: 3,
 function synthRow(rnd, at) {
   const kind = weighted({ symptom: 78, policy: 8, promo: 7, lookup: 7 }, rnd);
   const base = { question: '', t: '', qtype: kind, tags: [], productIds: [], categories: [], policyHits: [] };
-  const triage = { intended_for: null, age_bucket: null, age: null, pregnant: false, complaints: [], complaint_raw: '', duration: null, prior_remedies: null, prior_failed: false, tried_ingredient: null, tried_product_ids: [], complete: true };
+  const triage = { age_band: null, age: null, pregnant: false, complaints: [], complaint_raw: '', duration: null, prior_remedies: null, prior_failed: false, tried_ingredient: null, tried_product_ids: [], complete: true };
   if (kind === 'policy') { const p = POLICIES[Math.floor(rnd() * POLICIES.length)]; base.policyHits = [p]; }
   else if (kind === 'lookup') { const p = PRODUCTS[Math.floor(rnd() * PRODUCTS.length)]; base.productIds = [p.id]; }
   else if (kind === 'symptom') {
     const prof = PROFILES[(() => { let x = rnd() * PROFILES.reduce((s, p) => s + p.w, 0); for (let i = 0; i < PROFILES.length; i++) { x -= PROFILES[i].w; if (x <= 0) return i; } return 0; })()];
-    triage.intended_for = prof.intended_for; triage.age_bucket = prof.age_bucket;
+    triage.age_band = prof.band;
     const gap = rnd() < 0.05;
     const tag = gap ? weighted(GAP_TERMS, rnd) : weighted(prof.complaints, rnd);
     triage.complaints = [tag];
@@ -898,7 +906,8 @@ function synthRow(rnd, at) {
     triage.prior_remedies = weighted(LONG_RUNNING.has(tag) ? { 'iets zonder recept': 45, 'iets op recept': 20, 'nog niets': 27, 'weet niet': 8 }
       : { 'nog niets': 52, 'iets zonder recept': 32, 'iets op recept': 9, 'weet niet': 7 }, rnd);
     if (triage.prior_remedies === 'iets zonder recept') triage.prior_failed = rnd() < 0.4;
-    if ((prof.intended_for === 'mezelf' || prof.intended_for === 'partner')) triage.pregnant = rnd() < (['hoofdpijn', 'vermoeidheid', 'verkoudheid'].includes(tag) ? 0.13 : 0.04);
+    if (prof.band === '18-34') triage.pregnant = rnd() < (['hoofdpijn', 'vermoeidheid', 'verkoudheid'].includes(tag) ? 0.18 : 0.06);
+    else if (prof.band === '35-49') triage.pregnant = rnd() < 0.04;
     base.tags = triage.complaints;
   }
   base.triage = triage;
@@ -912,7 +921,7 @@ function buildHistoryRows() {
     const d = new Date(TODAY); d.setDate(d.getDate() - day);
     const dow = d.getDay();
     if (dow === 0) continue; // closed on Sundays
-    const n = Math.round((dow === 6 ? 7 : 4) + rnd() * 4);
+    const n = Math.round((dow === 6 ? 30 : 18) + rnd() * 13); // a staffed counter, not a trickle
     for (let i = 0; i < n; i++) {
       const h = 9 + Math.floor(rnd() * 9), m = Math.floor(rnd() * 60);
       const at = new Date(d); at.setHours(h, m, 0, 0);
@@ -926,7 +935,7 @@ let HISTORY_ROWS = [];
 /* ---------- dashboard: linked filters over the log rows ---------- */
 const DIMS = {
   complaint: { label: 'Klacht', values: r => r.complaints },
-  audience: { label: 'Doelgroep', values: r => [r.audience] },
+  age_band: { label: 'Leeftijd', values: r => r.age_band ? [r.age_band] : [] },
   category: { label: 'Categorie', values: r => [r.category] },
   outcome: { label: 'Uitkomst', values: r => [OUTCOME_LABEL[r.outcome] || r.outcome] },
   escalation: { label: 'Doorverwijzing', values: r => [ESC_LABEL[r.escalation] || r.escalation] },
@@ -959,10 +968,22 @@ function pctLabel(n, d) { return d ? Math.round(n / d * 100) + '%' : '0%'; }
 function panelHtml(dim, baseRows, opts = {}) {
   const scope = baseRows.filter(r => matches(r, dim));
   const cur = tally(scope, dim), all = tally(baseRows, dim);
+  const sel = state.filters[dim];
+  // Share mode answers "what fraction of THIS group matches the selection", which is
+  // the only fair comparison when the groups differ in size.
+  if (opts.share) {
+    const rated = [...all.entries()].map(([k, total]) => [k, (cur.get(k) || 0) / total, cur.get(k) || 0, total])
+      .sort((a, b) => b[1] - a[1]).slice(0, opts.limit || 8);
+    if (!rated.length) return '<p class="muted small">Geen gegevens in deze periode</p>';
+    const maxRate = Math.max(...rated.map(r => r[1])) || 1;
+    return rated.map(([k, rate, n, total]) => `<button class="bar-row${sel === k ? ' sel' : ''}" data-filter="${dim}" data-value="${esc(k)}" aria-pressed="${sel === k}" data-tip="${esc(k)} — ${n} van de ${total} vragen uit deze leeftijdsgroep (${pctLabel(n, total)})">
+      <span class="bar-label">${esc(cap(String(k)))}</span>
+      <span class="bar-track" style="width:${Math.max(6, rate / maxRate * 100)}%"><span class="bar-fill" style="width:100%"></span></span>
+      <span class="bar-n">${pctLabel(n, total)}</span></button>`).join('');
+  }
   const entries = [...all.entries()].sort((a, b) => (cur.get(b[0]) || 0) - (cur.get(a[0]) || 0) || b[1] - a[1]).slice(0, opts.limit || 8);
   if (!entries.length) return '<p class="muted small">Geen gegevens in deze periode</p>';
   const max = Math.max(...entries.map(e => e[1]));
-  const sel = state.filters[dim];
   return entries.map(([k, total]) => {
     const n = cur.get(k) || 0;
     const isSel = sel === k;
@@ -974,17 +995,17 @@ function panelHtml(dim, baseRows, opts = {}) {
 }
 
 function matrixHtml(baseRows) {
-  const scope = baseRows.filter(r => matches(r, 'complaint') && matches(r, 'audience'));
+  const scope = baseRows.filter(r => matches(r, 'complaint') && matches(r, 'age_band'));
   const comps = [...tally(scope, 'complaint').entries()].sort((a, b) => b[1] - a[1]).slice(0, 8).map(e => e[0]);
   // only audiences that actually carry a complaint: non-symptom rows have none
   const withComplaint = scope.filter(r => r.complaints.length);
-  const AUD_ORDER = ['Klant zelf', 'Partner', 'Andere volwassene', 'Kind 0-5 jaar', 'Kind 6-11 jaar', 'Kind 12-17 jaar'];
-  const present = tally(withComplaint, 'audience');
+  const AUD_ORDER = AGE_BANDS.map(b => BAND_LABEL[b]);
+  const present = tally(withComplaint, 'age_band');
   const auds = AUD_ORDER.filter(a => present.get(a)).concat([...present.keys()].filter(a => !AUD_ORDER.includes(a)));
   if (!comps.length || !auds.length) return '<p class="muted small">Geen gegevens in deze periode</p>';
   const cell = {}; let max = 0;
-  for (const r of scope) for (const c of r.complaints) { if (!comps.includes(c)) continue; const k = c + '||' + r.audience; cell[k] = (cell[k] || 0) + 1; if (cell[k] > max) max = cell[k]; }
-  const short = a => a.replace('Kind ', '').replace(' jaar', '').replace('Andere volwassene', 'Ander').replace('Klant zelf', 'Zelf');
+  for (const r of scope) for (const c of r.complaints) { if (!comps.includes(c)) continue; const k = c + '||' + r.age_band; cell[k] = (cell[k] || 0) + 1; if (cell[k] > max) max = cell[k]; }
+  const short = a => a.replace(' jaar en ouder', '+').replace(' jaar', '');
   const grid = ` style="grid-template-columns:136px repeat(${auds.length}, minmax(42px, 1fr)) 54px"`;
   const head = `<div class="mx-row mx-head"${grid}><span class="mx-corner"></span>${auds.map(a => `<span class="mx-col" data-tip="${esc(a)}">${esc(short(a))}</span>`).join('')}<span class="mx-tot">Totaal</span></div>`;
   const body = comps.map(c => {
@@ -993,7 +1014,7 @@ function matrixHtml(baseRows) {
       const n = cell[c + '||' + a] || 0;
       const pct = max ? n / max : 0;
       const strong = pct > 0.55;
-      const on = state.filters.complaint === c && state.filters.audience === a;
+      const on = state.filters.complaint === c && state.filters.age_band === a;
       return `<button class="mx-cell${on ? ' sel' : ''}" data-cell="${esc(c)}||${esc(a)}" style="background:color-mix(in oklab, var(--accent) ${Math.round(pct * 82)}%, var(--surface-2)); color:${strong ? 'var(--on-accent)' : 'var(--text)'}" data-tip="${esc(cap(c))} bij ${esc(a)} — ${n} ${n === 1 ? 'vraag' : 'vragen'}, ${pctLabel(n, rowTot)} van alle ${esc(c)}-vragen">${n || ''}</button>`;
     }).join('');
     return `<div class="mx-row"${grid}><button class="mx-rowlabel${state.filters.complaint === c ? ' sel' : ''}" data-filter="complaint" data-value="${esc(c)}" data-tip="Filter op ${esc(c)}">${esc(cap(c))}</button>${cells}<span class="mx-tot">${rowTot}</span></div>`;
@@ -1003,10 +1024,10 @@ function matrixHtml(baseRows) {
 
 // Which attributes are over-represented in the current selection, versus the period as a whole.
 function liftHtml(baseRows, filtered) {
-  if (!hasFilters()) return `<p class="muted small">Klik op een klacht, doelgroep of uitkomst hiernaast. Alle panelen en de kruistabel filteren mee, en hier verschijnt wat aan die groep opvalt.</p>`;
+  if (!hasFilters()) return `<p class="muted small">Klik op een klacht, leeftijdsgroep of uitkomst hiernaast. Alle panelen en de kruistabel filteren mee, en hier verschijnt wat aan die groep opvalt.</p>`;
   if (filtered.length < 8) return `<p class="muted small">Te weinig vragen in deze selectie (${filtered.length}) voor een betrouwbaar profiel. Verruim de periode of het filter.</p>`;
   const out = [];
-  for (const dim of ['audience', 'duration', 'outcome', 'escalation', 'category', 'complaint']) {
+  for (const dim of ['age_band', 'duration', 'outcome', 'escalation', 'category', 'complaint']) {
     if (state.filters[dim] != null) continue;
     const sub = tally(filtered, dim), base = tally(baseRows, dim);
     for (const [k, n] of sub.entries()) {
@@ -1036,7 +1057,7 @@ function filterChips() {
 }
 
 function buildCsv(rows) {
-  const cols = ['at', 'question_type', 'category', 'complaints', 'audience', 'pregnant', 'duration', 'prior_remedies', 'outcome', 'escalation', 'recommended_id', 'blocked_ids', 'promo_id', 'assortment_gap'];
+  const cols = ['at', 'question_type', 'category', 'complaints', 'age_band', 'pregnant', 'duration', 'prior_remedies', 'outcome', 'escalation', 'recommended_id', 'blocked_ids', 'promo_id', 'assortment_gap'];
   const q = v => '"' + String(Array.isArray(v) ? v.join('|') : v ?? '').replace(/"/g, '""') + '"';
   return '﻿' + [cols.join(',')].concat(rows.map(r => cols.map(c => q(c === 'pregnant' ? (r.pregnant ? 1 : 0) : r[c])).join(','))).join('\n');
 }
@@ -1093,10 +1114,17 @@ function renderHistory() {
     ${filterChips()}
     ${kpi(filtered, baseRows)}
     <div class="dash">
-      <div class="card span2"><div class="label" style="margin-bottom:12px">Klacht × doelgroep${hasFilters() ? ' · binnen selectie' : ''}</div>${matrixHtml(baseRows)}<p class="muted small" style="margin-top:12px">Donkerder is vaker. Klik een cel om op die combinatie te filteren.</p></div>
+      <div class="card span2"><div class="label" style="margin-bottom:12px">Klacht × leeftijd${hasFilters() ? ' · binnen selectie' : ''}</div>${matrixHtml(baseRows)}<p class="muted small" style="margin-top:12px">Donkerder is vaker. Klik een cel om op die combinatie te filteren.</p></div>
       <div class="card"><div class="label" style="margin-bottom:12px">Opvallend aan deze selectie</div>${liftHtml(baseRows, filtered)}</div>
       <div class="card"><div class="label" style="margin-bottom:10px">Klachten</div>${panelHtml('complaint', baseRows)}</div>
-      <div class="card"><div class="label" style="margin-bottom:10px">Doelgroep</div>${panelHtml('audience', baseRows)}</div>
+      <div class="card">
+        <div class="row" style="justify-content:space-between; margin-bottom:10px">
+          <span class="label" style="margin:0">Leeftijd</span>
+          ${hasFilters() ? `<span class="seg small">${[['count', 'Aantal'], ['share', 'Aandeel']].map(([m, l]) => `<button class="segbtn ${state.ageMode === m ? 'on' : ''}" data-agemode="${m}">${l}</button>`).join('')}</span>` : ''}
+        </div>
+        ${panelHtml('age_band', baseRows, { share: hasFilters() && state.ageMode === 'share' })}
+        ${hasFilters() && state.ageMode === 'share' ? '<p class="muted small" style="margin-top:10px">Aandeel van elke leeftijdsgroep dat deze selectie betreft. Corrigeert voor groepsgrootte: een grote groep levert altijd meer vragen op, ook zonder dat de klacht daar vaker voorkomt.</p>' : ''}
+      </div>
       <div class="card"><div class="label" style="margin-bottom:10px">Uitkomst</div>${panelHtml('outcome', baseRows)}</div>
       <div class="card"><div class="label" style="margin-bottom:10px">Doorverwijzing</div>${panelHtml('escalation', baseRows)}</div>
       <div class="card"><div class="label" style="margin-bottom:10px">Categorie</div>${panelHtml('category', baseRows)}</div>
@@ -1133,14 +1161,15 @@ function openPresent() {
 
 /* ---------- events ---------- */
 document.addEventListener('click', e => {
-  const b = e.target.closest('[data-view],[data-action],[data-example],[data-gap],[data-hist],[data-filter],[data-cell],[data-period]');
+  const b = e.target.closest('[data-view],[data-action],[data-example],[data-gap],[data-hist],[data-filter],[data-cell],[data-period],[data-agemode]');
   if (!b) { if (!e.target.closest('#pop') && !e.target.closest('#settingsBtn')) { const pop = document.getElementById('pop'); if (!pop.hidden) { pop.hidden = true; } } return; }
   if (b.dataset.view) { state.view = b.dataset.view; render(); return; }
   if (b.dataset.example) { state.view = 'ask'; state.phase = 'input'; state.question = b.dataset.example; render(); startQuestion(b.dataset.example); return; }
   if (b.dataset.hist !== undefined) { state.result = state.history[+b.dataset.hist]; state.view = 'employee'; render(); return; }
   if (b.dataset.filter) { const d = b.dataset.filter, v = b.dataset.value; state.filters[d] = state.filters[d] === v ? null : v; hideTip(); render(); return; }
-  if (b.dataset.cell) { const [c, a] = b.dataset.cell.split('||'); const on = state.filters.complaint === c && state.filters.audience === a; state.filters.complaint = on ? null : c; state.filters.audience = on ? null : a; hideTip(); render(); return; }
+  if (b.dataset.cell) { const [c, a] = b.dataset.cell.split('||'); const on = state.filters.complaint === c && state.filters.age_band === a; state.filters.complaint = on ? null : c; state.filters.age_band = on ? null : a; hideTip(); render(); return; }
   if (b.dataset.period) { state.period = +b.dataset.period; render(); return; }
+  if (b.dataset.agemode) { state.ageMode = b.dataset.agemode; render(); return; }
   if (b.dataset.gap && b.dataset.value !== undefined) { answerGap(b.dataset.gap, b.dataset.value); return; }
   const a = b.dataset.action;
   if (a === 'send') { const q = document.getElementById('q').value.trim(); if (q) startQuestion(q); }
@@ -1198,9 +1227,9 @@ seed('Is er korting op aftersun?', {}, 1, '13:05');
 seed('Mijn peuter heeft koorts sinds vannacht, nog niets gegeven', {}, 1, '15:30');
 seed('Heb je iets tegen wratten?', {}, 1, '16:48');
 seed('Kan ik een geopende dagcrème retourneren?', {}, 0, '08:41');
-seed('Ik ben zwanger en heb sinds vanochtend hoofdpijn, nog niets genomen', {}, 0, '09:12');
+seed('Ik ben 29 en zwanger, sinds vanochtend hoofdpijn, nog niets genomen', {}, 0, '09:12');
 seed('Mijn zoon van 8 heeft sinds gisteren keelpijn, we hebben nog niets geprobeerd', {}, 0, '09:35');
-seed('Mijn partner wil stoppen met roken, hij heeft eerder pleisters geprobeerd', { duration: 'een week of langer' }, 0, '10:20');
+seed('Mijn man van 45 wil stoppen met roken, hij heeft eerder pleisters geprobeerd', { duration: 'een week of langer' }, 0, '10:20');
 state.result = state.history[0];
 HISTORY_ROWS = buildHistoryRows();
 render();
