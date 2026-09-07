@@ -316,7 +316,7 @@ const shortName = p => p.name.replace(/\s*\(.*?\)\s*$/, '').replace(/\b\d+([.,]\
 
 /* ---------- state ---------- */
 const state = {
-  view: 'ask', phase: 'input', mode: 'sim', apiKey: '', insightTab: 'klachten',
+  view: 'ask', phase: 'input', mode: 'sim', apiKey: '', insightTab: 'klachten', csvNotice: '',
   question: '', ctx: null, gaps: [], result: null, history: [], liveNotice: '',
 };
 const STANDARD_CATEGORIES = [...new Set(PRODUCTS.map(p => p.category)), 'Beleid', 'Acties', 'Product opzoeken', 'Overig'];
@@ -787,6 +787,12 @@ function audienceLabel(tr) {
   if (tr.intended_for === 'kind') return 'Kind ' + (tr.age_bucket ? tr.age_bucket + ' jaar' : '(leeftijd onbekend)');
   return { mezelf: 'Klant zelf', partner: 'Partner', ander: 'Andere volwassene' }[tr.intended_for];
 }
+// The gap term is the one field derived from free text. Keep it a short term, never a sentence.
+function gapTerm(r) {
+  if (!(r.outcome === 'no_match' && r.qtype === 'symptom')) return '';
+  const t = complaintLabel(r.triage).toLowerCase().replace(/[^a-zà-ÿ0-9 ]+/g, ' ').replace(/\s+/g, ' ').trim();
+  return (!t || t.split(' ').length > 4 || t.length > 40) ? 'overig' : t;
+}
 function logRow(r) {
   return {
     at: r.at, question_type: r.qtype, category: r.category,
@@ -794,7 +800,7 @@ function logRow(r) {
     duration: r.triage.duration || '', prior_remedies: r.triage.prior_remedies || '',
     outcome: r.outcome, escalation: r.escalation ? r.escalation.level : 'none',
     recommended_id: r.recommended ? r.recommended.id : '', blocked_ids: (r.blocked || []).map(b => b.p.id).join('|'),
-    promo_id: r.promos && r.promos.length ? r.promos[0].id : '', assortment_gap: r.outcome === 'no_match' && r.qtype === 'symptom' ? complaintLabel(r.triage) : '',
+    promo_id: r.promos && r.promos.length ? r.promos[0].id : '', assortment_gap: gapTerm(r),
   };
 }
 function count(list, keyFn) {
@@ -807,13 +813,30 @@ function bars(entries, total, opts = {}) {
   const max = entries[0][1];
   return entries.map(([k, n]) => `<div class="bar-row" title="${n} van ${total} (${total ? Math.round(n / total * 100) : 0}%)"><span class="bar-label">${esc(cap(String(k)))}${opts.sub && opts.sub[k] ? `<span class="bar-sub">${esc(opts.sub[k])}</span>` : ''}</span><span class="bar-track"><span class="bar-fill" style="width:${Math.max(3, n / max * 100)}%"></span></span><span class="bar-n">${n}</span></div>`).join('');
 }
-function exportCsv() {
+function buildCsv() {
   const cols = ['at', 'question_type', 'category', 'complaints', 'audience', 'pregnant', 'duration', 'prior_remedies', 'outcome', 'escalation', 'recommended_id', 'blocked_ids', 'promo_id', 'assortment_gap'];
   const q = v => '"' + String(v ?? '').replace(/"/g, '""') + '"';
   const lines = [cols.join(',')].concat([...state.history].reverse().map(r => { const row = logRow(r); return cols.map(c => q(row[c])).join(','); }));
-  const blob = new Blob(['﻿' + lines.join('\n')], { type: 'text/csv;charset=utf-8' });
-  const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = 'drugstore-inzichten.csv'; document.body.appendChild(a); a.click(); a.remove();
-  setTimeout(() => URL.revokeObjectURL(a.href), 1000);
+  return '﻿' + lines.join('\n');
+}
+async function exportCsv() {
+  const csv = buildCsv(), filename = 'drugstore-inzichten.csv';
+  state.csvNotice = '';
+  // Hosted viewer: the page may not download directly, so ask the platform to save.
+  let dl = null;
+  try { if (window.claude && typeof window.claude.use === 'function') dl = await window.claude.use('downloads'); } catch (e) { dl = null; }
+  if (dl) {
+    try { await dl.save({ filename: filename, data: csv }); }
+    catch (e) { if (!e || e.code !== 'declined') { state.csvNotice = 'Exporteren lukte niet' + (e && e.message ? ': ' + e.message : '') + '.'; render(); } }
+    return;
+  }
+  // Local file: an ordinary download link.
+  try {
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(new Blob([csv], { type: 'text/csv;charset=utf-8' }));
+    a.download = filename; document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(() => URL.revokeObjectURL(a.href), 1000);
+  } catch (e) { state.csvNotice = 'Exporteren lukte niet: ' + e.message + '.'; render(); }
 }
 function renderInsights() {
   const H = state.history, N = H.length, tab = state.insightTab;
@@ -850,6 +873,7 @@ function renderHistory() {
   const tabs = [['klachten', 'Klachten'], ['categorieen', 'Categorieën'], ['doelgroep', 'Doelgroep'], ['uitkomsten', 'Uitkomsten'], ['producten', 'Producten']];
   const outcomeShort = r => r.qtype === 'symptom' ? (r.recommended ? shortName(r.recommended) : r.outcome === 'no_match' ? 'niet in assortiment' : 'geen veilig product') : { policy: 'beleid', promo: 'actie', lookup: r.recommended ? shortName(r.recommended) : 'niet gevonden', unknown: 'onbekend' }[r.qtype];
   return `<div class="view-head"><div><h1>Geschiedenis</h1><p class="muted">Vragen uit deze sessie en wat de winkel eruit kan leren. Geen persoonsgegevens: alleen categorieën, uitkomsten en leeftijdsgroepen.</p></div><button class="btn-outline" data-action="csv">${icon('i-download', 'icon sm')}Exporteer CSV</button></div>
+    ${state.csvNotice ? `<div class="banner info">${icon('i-alert')}<div>${esc(state.csvNotice)}</div></div>` : ''}
     <div class="stats">
       <div class="stat"><div class="n">${N}</div><div class="l">Vragen</div></div>
       <div class="stat"><div class="n">${pct(referred)}</div><div class="l">Doorverwezen</div></div>

@@ -123,6 +123,8 @@ Purpose: the store learns what customers ask, for whom, and what happened, witho
 | `recommended_id`, `blocked_ids`, `promo_id` | record ids |
 | `assortment_gap` | the complaint term when `outcome == no_match` (purchasing signal) |
 
+`assortment_gap` is the only field derived from free text, because purchasing needs the word the customer used. Bound it: lowercase, letters and digits only, at most four words and 40 characters, otherwise write `overig`. A sentence must never reach the log.
+
 **Standard categories** are the product categories in `products.json` (Pijnstillers, Vitamines & Supplementen, Verkoudheid & Griep, Slaap, Stoppen met Roken, Huidverzorging, Eerste Hulp, Maag & Darm) plus four fixed ones for non-product questions: Beleid, Acties, Product opzoeken, Overig. A symptom question gets the category of the recommended product, else of the best candidate, else Overig.
 
 **Sub-tabs**, each a ranked list with counts and proportional bars:
