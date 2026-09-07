@@ -93,14 +93,21 @@
 
   .main { overflow-y: auto; padding: 32px 40px 48px; }
   .view { max-width: 920px; }
-  .view-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; margin-bottom: 22px; }
+  .view-head { display: flex; align-items: flex-start; justify-content: space-between; flex-wrap: wrap; gap: 12px 16px; margin-bottom: 22px; }
+  .view-head > .row { flex-wrap: wrap; }
   .view-head p { margin-top: 4px; }
 
   .card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 22px 24px; }
   .card + .card, .grid + .card, .card + .grid { margin-top: 16px; }
   .card.lift { box-shadow: var(--shadow); }
   .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
-  @media (max-width: 860px) { .grid { grid-template-columns: 1fr; } .body { grid-template-columns: 64px 1fr; } .nav span.txt, .sidebar .demo-note, .sidebar .btn-primary span { display: none; } .main { padding: 20px; } }
+  @media (max-width: 860px) {
+    .grid { grid-template-columns: 1fr; }
+    .body { grid-template-columns: 64px 1fr; }
+    .nav span.txt, .nav .badge, .sidebar .demo-note, .sidebar .btn-primary span { display: none; }
+    .nav { justify-content: center; padding: 10px 6px; }
+    .main { padding: 20px; }
+  }
 
   .textarea { width: 100%; min-height: 96px; padding: 14px 16px; border-radius: 10px; border: 1.5px solid var(--border); font: inherit; font-size: 15px; background: var(--surface); color: var(--text); resize: vertical; }
   .input { flex: 1; padding: 11px 14px; border-radius: 10px; border: 1.5px solid var(--border); font: inherit; background: var(--surface); color: var(--text); min-height: 44px; }
@@ -116,12 +123,12 @@
   .link { background: none; border: none; color: var(--accent); font-weight: 500; cursor: pointer; padding: 8px 0; min-height: 44px; }
 
   .chips { display: flex; flex-wrap: wrap; gap: 8px; }
-  .chip { display: inline-flex; align-items: center; min-height: 40px; padding: 8px 14px; border-radius: 999px; border: 1.5px solid var(--border); background: var(--surface); cursor: pointer; font-weight: 500; }
+  .chip { display: inline-flex; align-items: center; min-width: 0; min-height: 40px; padding: 8px 14px; border-radius: 999px; border: 1.5px solid var(--border); background: var(--surface); cursor: pointer; font-weight: 500; }
   .chip:hover { border-color: var(--accent); }
   .chip.example { background: var(--surface-2); border-color: transparent; font-weight: 400; color: var(--text); text-align: left; }
   .chip.example:hover { border-color: var(--accent); }
   .chip-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
-  .chip-grid .chip { border-radius: 10px; min-height: 48px; padding: 12px 16px; justify-content: flex-start; }
+  .chip-grid .chip { width: 100%; box-sizing: border-box; border-radius: 10px; min-height: 48px; padding: 12px 16px; justify-content: flex-start; text-align: left; white-space: normal; line-height: 1.25; }
 
   .quote { font-family: var(--display); font-size: 18px; line-height: 1.35; }
   .found { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; }
@@ -168,9 +175,11 @@
   .hist { display: flex; justify-content: space-between; align-items: center; gap: 16px; width: 100%; text-align: left; padding: 14px 4px; border: none; border-bottom: 1px solid var(--border); background: none; cursor: pointer; min-height: 56px; }
   .hist:last-child { border-bottom: none; }
   .hist:hover .q { color: var(--accent-dark); }
+  .hist > div:first-child { min-width: 0; }
   .hist .q { font-weight: 500; }
   .hist .m { font-size: 12.5px; color: var(--muted); margin-top: 2px; }
-  .hist .c { font-size: 12.5px; color: var(--muted); white-space: nowrap; }
+  .hist .c { font-size: 12.5px; color: var(--muted); white-space: nowrap; flex-shrink: 0; }
+  @media (max-width: 560px) { .hist .c { display: none; } }
   .stats { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px; margin-bottom: 16px; }
   @media (max-width: 980px) { .stats { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
   .stat { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 14px 16px; }
@@ -192,8 +201,10 @@
   .segbtn.on { background: var(--accent-soft); color: var(--accent-dark); font-weight: 600; }
 
   /* dashboard grid */
+  .dash-section + .dash-section { margin-top: 28px; }
+  .dash-title { font-family: var(--display); font-size: 15px; font-weight: 600; margin: 0 0 10px; padding-bottom: 8px; border-bottom: 1px solid var(--border); }
   .dash { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; align-items: start; margin-bottom: 20px; }
-  .dash .card { margin: 0; max-width: none; }
+  .dash .card { margin: 0; max-width: none; min-width: 0; }
   .dash .span2 { grid-column: span 2; }
   @media (max-width: 980px) { .dash { grid-template-columns: 1fr; } .dash .span2 { grid-column: span 1; } }
 
@@ -207,6 +218,20 @@
   .bar-track { height: 9px; background: var(--surface-2); border-radius: 5px; overflow: hidden; justify-self: stretch; }
   .bar-fill { display: block; height: 100%; background: var(--accent); border-radius: 5px; transition: width .18s ease; }
   .bar-n { text-align: right; font-variant-numeric: tabular-nums; font-weight: 600; }
+  @media (max-width: 560px) {
+    .bar-row { grid-template-columns: 1fr auto; grid-template-areas: "label label" "track n"; row-gap: 6px; padding: 10px 6px; }
+    .bar-row .bar-label { grid-area: label; white-space: normal; overflow: visible; text-overflow: clip; }
+    .bar-row .bar-track { grid-area: track; }
+    .bar-row .bar-n { grid-area: n; }
+  }
+  .stat-bar { display: block; width: 100%; text-align: left; background: none; border: none; border-radius: 8px; padding: 8px 6px; cursor: pointer; color: inherit; }
+  .stat-bar:hover { background: var(--surface-2); }
+  .stat-bar.sel { background: var(--accent-soft); }
+  .stat-bar.sel .stat-bar-label { color: var(--accent-dark); font-weight: 600; }
+  .stat-bar-label { display: block; font-size: 13.5px; margin-bottom: 8px; }
+  .stat-bar-row { display: flex; align-items: center; gap: 12px; }
+  .stat-bar-row .bar-track { flex: 1; }
+  .stat-bar-row .bar-n { min-width: 38px; }
 
   /* cross-tab matrix */
   .matrix { display: flex; flex-direction: column; gap: 3px; overflow-x: auto; }
@@ -223,8 +248,8 @@
   .mx-cell.sel { outline: 2.5px solid var(--accent-dark); outline-offset: -2px; }
 
   /* lift list */
-  .lift { display: flex; gap: 12px; align-items: baseline; padding: 9px 0; border-bottom: 1px solid var(--border); }
-  .lift:last-child { border-bottom: none; }
+  .lift-row { display: flex; gap: 12px; align-items: baseline; padding: 9px 0; border-bottom: 1px solid var(--border); }
+  .lift-row:last-child { border-bottom: none; }
   .lift-x { font-family: var(--display); font-weight: 700; font-size: 17px; color: var(--accent); font-variant-numeric: tabular-nums; min-width: 44px; }
   .lift-t { display: flex; flex-direction: column; gap: 2px; font-size: 13.5px; }
   .lift-d { font-size: 12px; color: var(--muted); }
@@ -768,7 +793,7 @@ function renderAsk() {
       <div class="label" style="color:var(--accent); margin-bottom:8px">Nog even nodig, ${state.gaps.length} ${state.gaps.length === 1 ? 'vraag' : 'vragen'}</div>
       <h2>${esc(ui.title)}</h2>
       <div class="chip-grid" style="margin-top:16px">${ui.chips.map(([l, v]) => `<button class="chip" data-gap="${field}" data-value="${esc(v)}">${esc(l)}</button>`).join('')}</div>
-      ${ui.free ? `<div class="row" style="margin-top:12px"><label class="sr" for="free">${esc(ui.freeHint || 'Of typ het zelf')}</label><input id="free" class="input" placeholder="${esc(ui.freeHint || 'Of typ het zelf')}"><button class="btn-outline" data-action="free" data-gap="${field}">Doorgaan</button></div>` : ''}
+      ${ui.free ? `<div class="row wrap" style="margin-top:12px"><label class="sr" for="free">${esc(ui.freeHint || 'Of typ het zelf')}</label><input id="free" class="input" placeholder="${esc(ui.freeHint || 'Of typ het zelf')}"><button class="btn-outline" data-action="free" data-gap="${field}">Doorgaan</button></div>` : ''}
     </div>`;
   }
   return head + `<div class="card" style="margin-top:16px"><div class="row" style="justify-content:space-between"><div style="font-weight:500">Antwoord staat klaar.</div><div class="row"><button class="btn-primary" data-view="employee">Medewerker</button><button class="btn-outline" data-view="customer">Klant</button></div></div></div>`;
@@ -965,6 +990,22 @@ function tally(rows, dim) {
 }
 function pctLabel(n, d) { return d ? Math.round(n / d * 100) + '%' : '0%'; }
 
+// Pregnancy is a demographic fact like age, but binary, so it gets one row,
+// not a ranked list. Denominator is symptom rows only (the only ones that
+// carry an age/pregnancy signal at all), scoped by every filter except itself.
+function pregnancyPanelHtml(baseRows) {
+  const scope = baseRows.filter(r => r.age_band && matches(r, 'pregnant'));
+  const total = scope.length;
+  if (!total) return '<p class="muted small">Geen gegevens in deze periode</p>';
+  const n = scope.filter(r => r.pregnant).length;
+  const sel = state.filters.pregnant != null;
+  const pct = n / total * 100;
+  return `<button class="stat-bar${sel ? ' sel' : ''}" data-filter="pregnant" data-value="Ja" aria-pressed="${sel}" data-tip="Zwangerschap of borstvoeding vermeld bij ${n} van ${total} vragen met een leeftijd (${pctLabel(n, total)})">
+    <span class="stat-bar-label">Zwangerschap of borstvoeding vermeld</span>
+    <span class="stat-bar-row"><span class="bar-track"><span class="bar-fill" style="width:${Math.max(n ? 3 : 0, pct)}%"></span></span><span class="bar-n">${pctLabel(n, total)}</span></span>
+  </button>`;
+}
+
 function panelHtml(dim, baseRows, opts = {}) {
   const scope = baseRows.filter(r => matches(r, dim));
   const cur = tally(scope, dim), all = tally(baseRows, dim);
@@ -1046,7 +1087,7 @@ function liftHtml(baseRows, filtered) {
   }
   out.sort((a, b) => b.lift - a.lift);
   if (!out.length) return `<p class="muted small">Deze selectie wijkt niet noemenswaardig af van het gemiddelde in deze periode.</p>`;
-  return out.slice(0, 5).map(o => `<div class="lift"><span class="lift-x">${o.lift.toFixed(1)}×</span><span class="lift-t"><strong>${esc(o.k)}</strong><span class="lift-d">${DIMS[o.dim] ? DIMS[o.dim].label : 'Kenmerk'} · ${o.n} vragen · ${Math.round(o.share * 100)}% van deze selectie</span></span></div>`).join('');
+  return out.slice(0, 5).map(o => `<div class="lift-row"><span class="lift-x">${o.lift.toFixed(1)}×</span><span class="lift-t"><strong>${esc(o.k)}</strong><span class="lift-d">${DIMS[o.dim] ? DIMS[o.dim].label : 'Kenmerk'} · ${o.n} vragen · ${Math.round(o.share * 100)}% van deze selectie</span></span></div>`).join('');
 }
 
 function hasFilters() { return Object.values(state.filters).some(v => v != null); }
@@ -1113,25 +1154,53 @@ function renderHistory() {
     ${state.csvNotice ? `<div class="banner info">${icon('i-alert')}<div>${esc(state.csvNotice)}</div></div>` : ''}
     ${filterChips()}
     ${kpi(filtered, baseRows)}
-    <div class="dash">
-      <div class="card span2"><div class="label" style="margin-bottom:12px">Klacht × leeftijd${hasFilters() ? ' · binnen selectie' : ''}</div>${matrixHtml(baseRows)}<p class="muted small" style="margin-top:12px">Donkerder is vaker. Klik een cel om op die combinatie te filteren.</p></div>
-      <div class="card"><div class="label" style="margin-bottom:12px">Opvallend aan deze selectie</div>${liftHtml(baseRows, filtered)}</div>
-      <div class="card"><div class="label" style="margin-bottom:10px">Klachten</div>${panelHtml('complaint', baseRows)}</div>
-      <div class="card">
-        <div class="row" style="justify-content:space-between; margin-bottom:10px">
-          <span class="label" style="margin:0">Leeftijd</span>
-          ${hasFilters() ? `<span class="seg small">${[['count', 'Aantal'], ['share', 'Aandeel']].map(([m, l]) => `<button class="segbtn ${state.ageMode === m ? 'on' : ''}" data-agemode="${m}">${l}</button>`).join('')}</span>` : ''}
-        </div>
-        ${panelHtml('age_band', baseRows, { share: hasFilters() && state.ageMode === 'share' })}
-        ${hasFilters() && state.ageMode === 'share' ? '<p class="muted small" style="margin-top:10px">Aandeel van elke leeftijdsgroep dat deze selectie betreft. Corrigeert voor groepsgrootte: een grote groep levert altijd meer vragen op, ook zonder dat de klacht daar vaker voorkomt.</p>' : ''}
+    <div class="dash-section">
+      <h2 class="dash-title">Kruisverband</h2>
+      <div class="dash">
+        <div class="card span2"><div class="label" style="margin-bottom:12px">Klacht × leeftijd${hasFilters() ? ' · binnen selectie' : ''}</div>${matrixHtml(baseRows)}<p class="muted small" style="margin-top:12px">Donkerder is vaker. Klik een cel om op die combinatie te filteren.</p></div>
+        <div class="card span2"><div class="label" style="margin-bottom:12px">Opvallend aan deze selectie</div>${liftHtml(baseRows, filtered)}</div>
       </div>
-      <div class="card"><div class="label" style="margin-bottom:10px">Uitkomst</div>${panelHtml('outcome', baseRows)}</div>
-      <div class="card"><div class="label" style="margin-bottom:10px">Doorverwijzing</div>${panelHtml('escalation', baseRows)}</div>
-      <div class="card"><div class="label" style="margin-bottom:10px">Categorie</div>${panelHtml('category', baseRows)}</div>
-      <div class="card"><div class="label" style="margin-bottom:10px">Sinds wanneer</div>${panelHtml('duration', baseRows)}</div>
-      <div class="card span2"><div class="label" style="margin-bottom:10px">Gevraagd, niet in assortiment</div>
-        ${gapTally.length ? gapTally.map(([k, n]) => `<div class="bar-row static" data-tip="${esc(k)} — ${n} keer gevraagd, niets in het assortiment"><span class="bar-label">${esc(cap(k))}</span><span class="bar-track" style="width:${n / gapTally[0][1] * 100}%"><span class="bar-fill" style="width:100%"></span></span><span class="bar-n">${n}</span></div>`).join('') : '<p class="muted small">Geen hiaten in deze selectie</p>'}
-        <p class="muted small" style="margin-top:12px">Wat klanten vroegen en de winkel niet verkoopt. Dit is de inkooplijst.</p></div>
+    </div>
+
+    <div class="dash-section">
+      <h2 class="dash-title">Demografie</h2>
+      <div class="dash">
+        <div class="card">
+          <div class="row" style="justify-content:space-between; margin-bottom:10px">
+            <span class="label" style="margin:0">Leeftijd</span>
+            ${hasFilters() ? `<span class="seg small">${[['count', 'Aantal'], ['share', 'Aandeel']].map(([m, l]) => `<button class="segbtn ${state.ageMode === m ? 'on' : ''}" data-agemode="${m}">${l}</button>`).join('')}</span>` : ''}
+          </div>
+          ${panelHtml('age_band', baseRows, { share: hasFilters() && state.ageMode === 'share' })}
+          ${hasFilters() && state.ageMode === 'share' ? '<p class="muted small" style="margin-top:10px">Aandeel van elke leeftijdsgroep dat deze selectie betreft. Corrigeert voor groepsgrootte: een grote groep levert altijd meer vragen op, ook zonder dat de klacht daar vaker voorkomt.</p>' : ''}
+        </div>
+        <div class="card"><div class="label" style="margin-bottom:10px">Zwangerschap &amp; borstvoeding</div>${pregnancyPanelHtml(baseRows)}<p class="muted small" style="margin-top:10px">Alleen wat de klant zelf noemt; nooit afgeleid uit leeftijd of geslacht.</p></div>
+      </div>
+    </div>
+
+    <div class="dash-section">
+      <h2 class="dash-title">Klacht</h2>
+      <div class="dash">
+        <div class="card"><div class="label" style="margin-bottom:10px">Klachten</div>${panelHtml('complaint', baseRows)}</div>
+        <div class="card"><div class="label" style="margin-bottom:10px">Categorie</div>${panelHtml('category', baseRows)}</div>
+        <div class="card"><div class="label" style="margin-bottom:10px">Sinds wanneer</div>${panelHtml('duration', baseRows)}</div>
+      </div>
+    </div>
+
+    <div class="dash-section">
+      <h2 class="dash-title">Uitkomst</h2>
+      <div class="dash">
+        <div class="card"><div class="label" style="margin-bottom:10px">Uitkomst</div>${panelHtml('outcome', baseRows)}</div>
+        <div class="card"><div class="label" style="margin-bottom:10px">Doorverwijzing</div>${panelHtml('escalation', baseRows)}</div>
+      </div>
+    </div>
+
+    <div class="dash-section">
+      <h2 class="dash-title">Assortiment</h2>
+      <div class="dash">
+        <div class="card span2"><div class="label" style="margin-bottom:10px">Gevraagd, niet in assortiment</div>
+          ${gapTally.length ? gapTally.map(([k, n]) => `<div class="bar-row static" data-tip="${esc(k)} — ${n} keer gevraagd, niets in het assortiment"><span class="bar-label">${esc(cap(k))}</span><span class="bar-track" style="width:${n / gapTally[0][1] * 100}%"><span class="bar-fill" style="width:100%"></span></span><span class="bar-n">${n}</span></div>`).join('') : '<p class="muted small">Geen hiaten in deze selectie</p>'}
+          <p class="muted small" style="margin-top:12px">Wat klanten vroegen en de winkel niet verkoopt. Dit is de inkooplijst.</p></div>
+      </div>
     </div>
     <div class="card"><div class="label" style="margin-bottom:6px">Vragen uit deze sessie, klik om opnieuw te openen</div>${state.history.length ? state.history.map((r, i) => `<button class="hist" data-hist="${i}"><div><div class="q">${esc(r.question)}</div><div class="m">${esc(r.timestamp)} · ${esc(r.category)}${r.escalation && r.escalation.level !== 'none' ? ' · doorverwezen' : ''}${r.mode === 'live' ? ' · Claude' : ''}</div></div><div class="c">${esc(r.qtype === 'symptom' ? (r.recommended ? shortName(r.recommended) : r.outcome === 'no_match' ? 'niet in assortiment' : 'geen veilig product') : { policy: 'beleid', promo: 'actie', lookup: r.recommended ? shortName(r.recommended) : 'niet gevonden', unknown: 'onbekend' }[r.qtype])}</div></button>`).join('') : '<p class="muted">Nog geen vragen gesteld.</p>'}</div>`;
 }

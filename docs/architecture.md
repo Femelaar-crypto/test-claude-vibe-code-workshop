@@ -20,7 +20,7 @@ The reference implementation of everything below is `demo/template.html`. When t
 9. **Employee View**: escalation banner first, then answer, triage summary, safety checks (passed and blocked), recommendation with usage, promotion and disclaimer, alternatives, policies, sources as record ids.
 10. **Customer View**: product, price (promo price when `type == percent_off`), short answer, promotion, age note. Presentation mode fills the screen and hides all employee chrome.
 11. **Log** (`services/analytics_service.py`): every `QueryResult` becomes one structured row (category, complaints, age band, outcome, escalation, record ids, assortment gap). Never the question text, never personal data.
-12. **Inzichten**: one linked dashboard over the log rows. A period control, a filter bar, a KPI strip with deltas against the period average, a klacht × leeftijd matrix, an over-representation ("Opvallend") panel, six cross-filtered panels, and the assortment-gap list. Every panel filters every other; a panel never filters itself, so you can switch value within a dimension. The reopenable session questions sit below it. CSV export covers the current selection only.
+12. **Inzichten**: one linked dashboard over the log rows, grouped into five named sections so the page reads in the order an analyst would think about it: **Kruisverband** (klacht × leeftijd matrix + "Opvallend" over-representation panel), **Demografie** (Leeftijd, and Zwangerschap & borstvoeding as its own clickable stat rather than something buried in the lift panel), **Klacht** (Klachten, Categorie, Sinds wanneer), **Uitkomst** (Uitkomst, Doorverwijzing), **Assortiment** (the gap list). A period control and KPI strip with deltas sit above all five. Every panel filters every other; a panel never filters itself. The reopenable session questions sit below the dashboard. CSV export covers the current selection only.
 
 ## Categories
 
@@ -31,6 +31,8 @@ One closed list, so counts stay comparable over time: the product categories in 
 Counts are ranked lists with a proportional bar, one hue, count on the right and the share in the row's tooltip. The bar shows the filtered subset as a fill inside the period total, so selection and baseline read together. The matrix uses one light-to-dark green ramp for count and always prints the number. Never a pie, never a second y-axis. Every row is readable as text (label plus number), so colour carries no information on its own.
 
 Small numbers are handled explicitly: the over-representation panel stays silent below eight rows in the selection or three occurrences of a value, rather than presenting a ratio built on two questions.
+
+A binary fact (pregnancy or breastfeeding mentioned) is not a ranked list, so it does not use the multi-row bar-row grid: one full-width label, then the bar and percentage below it. Cramming a single stat into a layout built for many requires either a column too narrow for the label or an implicit assumption that the label is short -- neither held once the label was decided by content rather than by the grid.
 
 ## Data Layer
 

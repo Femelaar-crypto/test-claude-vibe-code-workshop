@@ -135,11 +135,16 @@ Purpose: the store learns what customers ask, for whom, and what happened, witho
 - **Period control**: 7 / 30 / 60 days, applied before anything else.
 - **Filter bar**: the active selection as removable chips, plus "Alles wissen". Filters combine with AND across dimensions.
 - **KPI strip**: questions in the selection, referral rate, not-in-assortment rate, promotion rate. When a filter is active each rate also shows its difference in percentage points against the period average, so the selection is always read against a baseline.
-- **Klacht × leeftijd matrix**: the cross-reference centrepiece. Cell intensity is one green ramp (light to dark) on count; the number is always printed, so colour never carries meaning alone. Clicking a cell sets both filters at once. Row totals on the right.
-- **"Opvallend aan deze selectie"**: over-representation (lift) of every attribute in the selection against the period average, ranked, e.g. "2.3× Klant zelf, 61% van deze selectie". Only shown at eight or more rows and three or more occurrences, so a handful of questions never produces a confident-looking claim.
-- **Aantal / Aandeel toggle on the age panel.** Counts follow group size, so the largest band tops almost every complaint and looks like an insight when it is not. Aandeel shows what fraction of *that* age group's questions match the selection, which is the only fair comparison between groups of different size: acne is 15% of the 18-34 band's questions but 44% of the 12-17 band's. Offered only while a filter is active, because without one it is meaningless.
-- **Linked panels**: Klachten, Leeftijd, Uitkomst, Doorverwijzing, Categorie, Sinds wanneer. Each bar shows the selection as a filled portion inside the period total, so subset and baseline are visible at once. A panel never filters itself, so switching value within a dimension stays possible.
-- **Gevraagd, niet in assortiment**: the assortment gaps, framed as the purchasing list.
+
+Below the KPIs the panels are grouped into five named sections, so the page reads as an analyst would think about it rather than as a flat list of charts:
+
+1. **Kruisverband**: the klacht × leeftijd matrix and "Opvallend aan deze selectie" together, because the cross-reference is the point of the dashboard, not one panel among many. Cell intensity in the matrix is one green ramp (light to dark) on count; the number is always printed, so colour never carries meaning alone. Clicking a cell sets both filters at once. "Opvallend" ranks over-representation (lift) against the period average, e.g. "2.3× 35-49 jaar, 61% van deze selectie", and only speaks up at eight or more rows and three or more occurrences, so a handful of questions never produces a confident-looking claim.
+2. **Demografie**: everything that describes the person, and only that. Leeftijd (with an Aantal / Aandeel toggle) and Zwangerschap & borstvoeding as its own clickable stat, not something that only surfaces when it happens to trigger the lift panel. Aandeel shows what fraction of *that* age group's questions match the selection, the only fair comparison between groups of different size: acne is 15% of the 18-34 band's questions but 44% of the 12-17 band's. Offered only while a filter is active, because without one it is meaningless.
+3. **Klacht**: what was asked about. Klachten, Categorie, Sinds wanneer.
+4. **Uitkomst**: what happened. Uitkomst, Doorverwijzing.
+5. **Assortiment**: Gevraagd, niet in assortiment, framed as the purchasing list.
+
+A panel never filters itself, so switching value within a dimension stays possible; each bar shows the selection as a filled portion inside the period total, so subset and baseline are visible at once.
 
 CSV export always exports exactly the current filtered selection, not everything.
 
